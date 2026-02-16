@@ -7,6 +7,7 @@ import Register from './pages/Register'
 import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
 import VerifyEmail from './pages/VerifyEmail'
+import AcceptInvite from './pages/AcceptInvite'
 import Dashboard from './pages/Dashboard'
 
 function AuthCallbackHandler() {
@@ -43,6 +44,7 @@ function App() {
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
+          <Route path="/accept-invite" element={<AcceptInvite />} />
 
           {/* Protected Routes */}
           <Route

@@ -1,8 +1,112 @@
+import { useState, useEffect } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 import DashboardLayout from '../../components/DashboardLayout'
+import { supabase } from '../../lib/supabase'
+import type { Invitation } from '../../types/auth'
 
 export default function OwnerDashboard() {
   const { user, tenant } = useAuth()
+  const [inviteEmail, setInviteEmail] = useState('')
+  const [inviteRole, setInviteRole] = useState<'admin' | 'member'>('member')
+  const [inviting, setInviting] = useState(false)
+  const [inviteMessage, setInviteMessage] = useState('')
+  const [invitations, setInvitations] = useState<Invitation[]>([])
+  const [loadingInvitations, setLoadingInvitations] = useState(true)
+
+  useEffect(() => {
+    fetchInvitations()
+  }, [tenant?.id])
+
+  const fetchInvitations = async () => {
+    if (!tenant?.id) return
+    
+    try {
+      const { data, error } = await supabase
+        .from('invitations')
+        .select('*')
+        .eq('tenant_id', tenant.id)
+        .order('created_at', { ascending: false })
+      
+      if (error) throw error
+      setInvitations(data || [])
+    } catch (error) {
+      console.error('Error fetching invitations:', error)
+    } finally {
+      setLoadingInvitations(false)
+    }
+  }
+
+  const handleInviteUser = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setInviting(true)
+    setInviteMessage('')
+
+    try {
+      // Generate a secure token
+      const token = crypto.randomUUID()
+      
+      // Create invitation
+      const { error: inviteError } = await supabase
+        .from('invitations')
+        .insert({
+          tenant_id: tenant?.id,
+          email: inviteEmail,
+          role: inviteRole,
+          invited_by: user?.id,
+          token,
+        })
+
+      if (inviteError) throw inviteError
+
+      // Send invitation email via edge function
+      const inviteUrl = `${window.location.origin}/accept-invite?token=${token}`
+      
+      const { error: emailError } = await supabase.functions.invoke('send-email', {
+        body: {
+          to: inviteEmail,
+          subject: `Invitation to join ${tenant?.name}`,
+          html: `
+            <h2>You've been invited!</h2>
+            <p>You've been invited to join <strong>${tenant?.name}</strong> as a ${inviteRole}.</p>
+            <p>Click the link below to accept the invitation and create your account:</p>
+            <p><a href="${inviteUrl}" style="background-color: #4F46E5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">Accept Invitation</a></p>
+            <p style="margin-top: 20px; font-size: 12px; color: #666;">This invitation will expire in 7 days.</p>
+            <p style="font-size: 12px; color: #666;">If the button doesn't work, copy and paste this link: ${inviteUrl}</p>
+          `,
+        },
+      })
+
+      if (emailError) {
+        console.error('Email sending failed:', emailError)
+        setInviteMessage('Invitation created but email failed to send. Please share the invitation link manually.')
+      } else {
+        setInviteMessage('Invitation sent successfully!')
+      }
+
+      setInviteEmail('')
+      setInviteRole('member')
+      fetchInvitations()
+    } catch (error: any) {
+      console.error('Error inviting user:', error)
+      setInviteMessage('Failed to send invitation: ' + error.message)
+    } finally {
+      setInviting(false)
+    }
+  }
+
+  const cancelInvitation = async (invitationId: string) => {
+    try {
+      const { error } = await supabase
+        .from('invitations')
+        .delete()
+        .eq('id', invitationId)
+
+      if (error) throw error
+      fetchInvitations()
+    } catch (error) {
+      console.error('Error canceling invitation:', error)
+    }
+  }
 
   return (
     <DashboardLayout>
@@ -109,6 +213,110 @@ export default function OwnerDashboard() {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* Invite Users Section */}
+        <div className="bg-white shadow rounded-lg p-6">
+          <h2 className="text-lg font-medium text-gray-900 mb-4">Invite Team Members</h2>
+          
+          <form onSubmit={handleInviteUser} className="space-y-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <div className="sm:col-span-2">
+                <label htmlFor="invite-email" className="block text-sm font-medium text-gray-700">
+                  Email Address
+                </label>
+                <input
+                  type="email"
+                  id="invite-email"
+                  value={inviteEmail}
+                  onChange={(e) => setInviteEmail(e.target.value)}
+                  required
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border"
+                  placeholder="colleague@example.com"
+                />
+              </div>
+              
+              <div>
+                <label htmlFor="invite-role" className="block text-sm font-medium text-gray-700">
+                  Role
+                </label>
+                <select
+                  id="invite-role"
+                  value={inviteRole}
+                  onChange={(e) => setInviteRole(e.target.value as 'admin' | 'member')}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border"
+                >
+                  <option value="member">Member</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <button
+                type="submit"
+                disabled={inviting}
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+              >
+                {inviting ? 'Sending...' : 'Send Invitation'}
+              </button>
+              
+              {inviteMessage && (
+                <p className={`text-sm ${inviteMessage.includes('successfully') ? 'text-green-600' : 'text-red-600'}`}>
+                  {inviteMessage}
+                </p>
+              )}
+            </div>
+          </form>
+
+          {/* Pending Invitations */}
+          <div className="mt-8">
+            <h3 className="text-sm font-medium text-gray-900 mb-3">Pending Invitations</h3>
+            
+            {loadingInvitations ? (
+              <p className="text-sm text-gray-500">Loading invitations...</p>
+            ) : invitations.filter(i => i.status === 'pending').length === 0 ? (
+              <p className="text-sm text-gray-500">No pending invitations</p>
+            ) : (
+              <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
+                <table className="min-w-full divide-y divide-gray-300">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Email</th>
+                      <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Role</th>
+                      <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Sent</th>
+                      <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Expires</th>
+                      <th className="relative py-3.5 pl-3 pr-4 sm:pr-6">
+                        <span className="sr-only">Actions</span>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200 bg-white">
+                    {invitations.filter(i => i.status === 'pending').map((invitation) => (
+                      <tr key={invitation.id}>
+                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-900">{invitation.email}</td>
+                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 capitalize">{invitation.role}</td>
+                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                          {new Date(invitation.created_at).toLocaleDateString()}
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                          {new Date(invitation.expires_at).toLocaleDateString()}
+                        </td>
+                        <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
+                          <button
+                            onClick={() => cancelInvitation(invitation.id)}
+                            className="text-red-600 hover:text-red-900"
+                          >
+                            Cancel
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         </div>
 

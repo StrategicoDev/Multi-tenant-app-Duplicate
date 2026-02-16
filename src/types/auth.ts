@@ -20,3 +20,16 @@ export interface AuthState {
   tenant: Tenant | null
   loading: boolean
 }
+
+export interface Invitation {
+  id: string
+  tenant_id: string
+  email: string
+  role: UserRole
+  invited_by: string | null
+  token: string
+  status: 'pending' | 'accepted' | 'expired'
+  expires_at: string
+  created_at: string
+  accepted_at: string | null
+}

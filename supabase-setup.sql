@@ -28,9 +28,24 @@ CREATE TABLE profiles (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW())
 );
 
+-- Create invitations table
+CREATE TABLE invitations (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id UUID REFERENCES tenants(id) ON DELETE CASCADE NOT NULL,
+  email TEXT NOT NULL,
+  role TEXT NOT NULL DEFAULT 'member' CHECK (role IN ('admin', 'member')),
+  invited_by UUID REFERENCES auth.users ON DELETE SET NULL,
+  token TEXT NOT NULL UNIQUE,
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'expired')),
+  expires_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW() + INTERVAL '7 days'),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()),
+  accepted_at TIMESTAMP WITH TIME ZONE
+);
+
 -- Enable Row Level Security
 ALTER TABLE tenants ENABLE ROW LEVEL SECURITY;
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE invitations ENABLE ROW LEVEL SECURITY;
 
 -- =====================================================
 -- TENANT TABLE POLICIES
@@ -95,6 +110,50 @@ CREATE POLICY "profile_delete_own"
   USING (id = auth.uid());
 
 -- =====================================================
+-- INVITATION TABLE POLICIES
+-- =====================================================
+
+-- SELECT: Owners and admins can view invitations for their tenant
+CREATE POLICY "invitation_select_policy"
+  ON invitations FOR SELECT
+  USING (
+    tenant_id IN (
+      SELECT tenant_id FROM profiles 
+      WHERE id = auth.uid() AND role IN ('owner', 'admin')
+    )
+  );
+
+-- INSERT: Only owners and admins can create invitations for their tenant
+CREATE POLICY "invitation_insert_policy"
+  ON invitations FOR INSERT
+  WITH CHECK (
+    tenant_id IN (
+      SELECT tenant_id FROM profiles 
+      WHERE id = auth.uid() AND role IN ('owner', 'admin')
+    )
+  );
+
+-- UPDATE: Only owners and admins can update invitations
+CREATE POLICY "invitation_update_policy"
+  ON invitations FOR UPDATE
+  USING (
+    tenant_id IN (
+      SELECT tenant_id FROM profiles 
+      WHERE id = auth.uid() AND role IN ('owner', 'admin')
+    )
+  );
+
+-- DELETE: Only owners and admins can delete invitations
+CREATE POLICY "invitation_delete_policy"
+  ON invitations FOR DELETE
+  USING (
+    tenant_id IN (
+      SELECT tenant_id FROM profiles 
+      WHERE id = auth.uid() AND role IN ('owner', 'admin')
+    )
+  );
+
+-- =====================================================
 -- PUBLIC FUNCTIONS
 -- =====================================================
 
@@ -122,6 +181,8 @@ DECLARE
   existing_tenant_count INTEGER;
   is_email_verified BOOLEAN;
   user_role TEXT;
+  invited_tenant_id UUID;
+  invited_role TEXT;
 BEGIN
   -- Check if email was just verified (changed from NULL to a timestamp)
   -- On INSERT: OLD is NULL, so check if NEW has email_confirmed_at set
@@ -145,6 +206,28 @@ BEGIN
     RETURN NEW;
   END IF;
 
+  -- Check if user was invited
+  SELECT tenant_id, role INTO invited_tenant_id, invited_role
+  FROM public.invitations
+  WHERE email = NEW.email
+    AND status = 'pending'
+    AND expires_at > NOW()
+  ORDER BY created_at DESC
+  LIMIT 1;
+
+  -- If user was invited, add them to the invited tenant
+  IF invited_tenant_id IS NOT NULL THEN
+    INSERT INTO public.profiles (id, tenant_id, email, role)
+    VALUES (
+      NEW.id,
+      invited_tenant_id,
+      NEW.email,
+      invited_role
+    );
+    RETURN NEW;
+  END IF;
+
+  -- Not invited: use existing tenant flow
   -- Check if any tenant already exists
   SELECT COUNT(*) INTO existing_tenant_count FROM public.tenants;
   
