@@ -1,14 +1,48 @@
-import { useState, FormEvent, ChangeEvent } from 'react'
+import { useState, FormEvent, ChangeEvent, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { supabase } from '../lib/supabase'
 
 export default function ResetPassword() {
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [verifying, setVerifying] = useState(true)
   const { updatePassword } = useAuth()
   const navigate = useNavigate()
+
+  useEffect(() => {
+    // Extract tokens from URL hash
+    const hash = window.location.hash.substring(1)
+    const params = new URLSearchParams(hash)
+    
+    const accessToken = params.get('access_token')
+    const refreshToken = params.get('refresh_token')
+    const type = params.get('type')
+
+    console.log('🔑 Reset password - tokens:', { hasAccessToken: !!accessToken, hasRefreshToken: !!refreshToken, type })
+
+    if (accessToken && refreshToken && type === 'recovery') {
+      // Set the session with the tokens
+      supabase.auth.setSession({
+        access_token: accessToken,
+        refresh_token: refreshToken,
+      }).then(({ error }) => {
+        if (error) {
+          console.error('❌ Error setting session:', error)
+          setError('Invalid or expired reset link. Please request a new one.')
+        } else {
+          console.log('✅ Session established for password reset')
+        }
+        setVerifying(false)
+      })
+    } else {
+      console.error('❌ Missing tokens or invalid type')
+      setError('Invalid reset link. Please request a new password reset.')
+      setVerifying(false)
+    }
+  }, [])
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
@@ -49,7 +83,25 @@ export default function ResetPassword() {
             Enter your new password below.
           </p>
         </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+
+        {verifying ? (
+          <div className="flex justify-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+          </div>
+        ) : error && !password ? (
+          <div className="space-y-4">
+            <div className="rounded-md bg-red-50 p-4">
+              <p className="text-sm text-red-800">{error}</p>
+            </div>
+            <button
+              onClick={() => navigate('/forgot-password')}
+              className="w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            >
+              Request new reset link
+            </button>
+          </div>
+        ) : (
+          <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           {error && (
             <div className="rounded-md bg-red-50 p-4">
               <p className="text-sm text-red-800">{error}</p>
@@ -101,6 +153,7 @@ export default function ResetPassword() {
             </button>
           </div>
         </form>
+        )}
       </div>
     </div>
   )
