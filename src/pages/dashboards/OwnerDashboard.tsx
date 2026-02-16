@@ -63,16 +63,10 @@ export default function OwnerDashboard() {
       
       const { data: emailData, error: emailError } = await supabase.functions.invoke('send-email', {
         body: {
-          to: inviteEmail,
-          subject: `Invitation to join ${tenant?.name}`,
-          html: `
-            <h2>You've been invited!</h2>
-            <p>You've been invited to join <strong>${tenant?.name}</strong> as a ${inviteRole}.</p>
-            <p>Click the link below to accept the invitation and create your account:</p>
-            <p><a href="${inviteUrl}" style="background-color: #4F46E5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">Accept Invitation</a></p>
-            <p style="margin-top: 20px; font-size: 12px; color: #666;">This invitation will expire in 7 days.</p>
-            <p style="font-size: 12px; color: #666;">If the button doesn't work, copy and paste this link: ${inviteUrl}</p>
-          `,
+          email: inviteEmail,
+          inviteUrl: inviteUrl,
+          tenantName: tenant?.name || 'the organization',
+          role: inviteRole,
         },
       })
 
