@@ -14,9 +14,14 @@ function AuthCallbackHandler() {
   const location = useLocation()
 
   useEffect(() => {
-    // If landing on any page with verification tokens, redirect to verify-email
+    // Don't redirect if already on verify-email or reset-password pages
+    if (location.pathname === '/verify-email' || location.pathname === '/reset-password') {
+      return
+    }
+    
+    // If landing on any OTHER page with verification tokens, redirect to verify-email
     const hash = window.location.hash
-    if (hash && hash.includes('access_token') && location.pathname !== '/verify-email') {
+    if (hash && hash.includes('access_token')) {
       console.log('🔗 Verification tokens detected, redirecting to /verify-email')
       navigate('/verify-email' + hash, { replace: true })
     }
