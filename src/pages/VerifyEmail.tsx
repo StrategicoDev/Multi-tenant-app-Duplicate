@@ -41,10 +41,10 @@ export default function VerifyEmail() {
         return
       }
 
-      // Handle different auth types
+      // Handle password recovery - redirect immediately before any async operations
       if (type === 'recovery') {
-        console.log('🔑 Password recovery detected')
-        navigate('/reset-password' + window.location.hash)
+        console.log('🔑 Password recovery detected, redirecting to reset-password...')
+        window.location.href = '/reset-password' + window.location.hash
         return
       }
 

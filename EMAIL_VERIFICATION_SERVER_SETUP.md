@@ -51,11 +51,23 @@ Password: f207a474fb9630680f1087da90521f5c
 ### 4. Configure Redirect URLs
 
 1. Go to **Authentication** → **URL Configuration**
-2. Add your site URL (e.g., `http://localhost:5173` for development)
-3. Add redirect URLs:
-   - `http://localhost:5173/verify-email`
-   - `http://localhost:5173/dashboard`
-   - Add production URLs when deployed
+2. **Set Site URL** to your production URL:
+   ```
+   https://single-tenant-app.netlify.app
+   ```
+3. **Add ALL these Redirect URLs:**
+   ```
+   http://localhost:5173/verify-email
+   http://localhost:5173/reset-password
+   http://localhost:5173/dashboard
+   https://single-tenant-app.netlify.app/verify-email
+   https://single-tenant-app.netlify.app/reset-password
+   https://single-tenant-app.netlify.app/dashboard
+   ```
+
+**Important:** Without these exact URLs whitelisted, Supabase will default to the Site URL, causing password reset to redirect incorrectly.
+
+4. Click **Save**
 
 ### 5. Test Email Verification
 
@@ -97,6 +109,11 @@ If empty, run the complete [supabase-setup.sql](supabase-setup.sql) file.
 **Issue: Verification link redirects to login instead of auto-login**
 - **Cause:** Redirect URL mismatch
 - **Fix:** Ensure redirect URLs match exactly in URL Configuration
+
+**Issue: Password reset link goes to /verify-email instead of /reset-password**
+- **Cause:** /reset-password not whitelisted in Redirect URLs
+- **Fix:** Add `https://single-tenant-app.netlify.app/reset-password` to Redirect URLs in Authentication → URL Configuration
+- **Note:** The VerifyEmail page will auto-redirect recovery types, but it's better to have the correct URL whitelisted
 
 ### View Logs
 
