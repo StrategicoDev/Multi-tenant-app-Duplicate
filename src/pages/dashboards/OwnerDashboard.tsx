@@ -61,7 +61,7 @@ export default function OwnerDashboard() {
       // Send invitation email via edge function
       const inviteUrl = `${window.location.origin}/accept-invite?token=${token}`
       
-      const { error: emailError } = await supabase.functions.invoke('send-email', {
+      const { data: emailData, error: emailError } = await supabase.functions.invoke('send-email', {
         body: {
           to: inviteEmail,
           subject: `Invitation to join ${tenant?.name}`,
@@ -76,9 +76,12 @@ export default function OwnerDashboard() {
         },
       })
 
+      console.log('Email function response:', { emailData, emailError })
+
       if (emailError) {
         console.error('Email sending failed:', emailError)
-        setInviteMessage('Invitation created but email failed to send. Please share the invitation link manually.')
+        // Still show success for invitation creation
+        setInviteMessage(`Invitation created! Share this link: ${inviteUrl}`)
       } else {
         setInviteMessage('Invitation sent successfully!')
       }
