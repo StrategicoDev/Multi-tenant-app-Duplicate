@@ -8,8 +8,21 @@ export default function VerifyEmail() {
   const navigate = useNavigate()
 
   useEffect(() => {
+    // Check for recovery type FIRST before any async operations
+    const hashParams = new URLSearchParams(window.location.hash.substring(1))
+    const type = hashParams.get('type')
+    
+    // Immediately redirect recovery to reset-password page
+    if (type === 'recovery') {
+      console.log('🔑 Recovery type detected, redirecting...')
+      // Use replace to prevent back button loop
+      navigate('/reset-password' + window.location.hash, { replace: true })
+      return
+    }
+    
+    // Only handle email verification if not recovery
     handleEmailVerification()
-  }, [])
+  }, [navigate])
 
   const handleEmailVerification = async () => {
     try {
@@ -21,14 +34,12 @@ export default function VerifyEmail() {
       
       const access_token = hashParams.get('access_token')
       const refresh_token = hashParams.get('refresh_token')
-      const type = hashParams.get('type')
       const error_code = hashParams.get('error_code')
       const error_description = hashParams.get('error_description')
 
       console.log('📦 Parsed params:', { 
         hasAccessToken: !!access_token, 
         hasRefreshToken: !!refresh_token, 
-        type, 
         error_code,
         error_description 
       })
@@ -41,14 +52,7 @@ export default function VerifyEmail() {
         return
       }
 
-      // Handle password recovery - redirect immediately before any async operations
-      if (type === 'recovery') {
-        console.log('🔑 Password recovery detected, redirecting to reset-password...')
-        window.location.href = '/reset-password' + window.location.hash
-        return
-      }
-
-      // If we have tokens from email verification
+      // If we have tokens from email verification (signup)
       if (access_token && refresh_token) {
         console.log('✅ Tokens found, setting session...')
         

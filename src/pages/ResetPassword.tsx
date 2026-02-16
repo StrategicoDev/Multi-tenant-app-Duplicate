@@ -9,10 +9,14 @@ export default function ResetPassword() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [verifying, setVerifying] = useState(true)
+  const [tokenProcessed, setTokenProcessed] = useState(false)
   const { updatePassword } = useAuth()
   const navigate = useNavigate()
 
   useEffect(() => {
+    // Prevent running multiple times
+    if (tokenProcessed) return
+    
     // Extract tokens from URL hash
     const hash = window.location.hash.substring(1)
     const params = new URLSearchParams(hash)
@@ -24,6 +28,7 @@ export default function ResetPassword() {
     console.log('🔑 Reset password - tokens:', { hasAccessToken: !!accessToken, hasRefreshToken: !!refreshToken, type })
 
     if (accessToken && refreshToken && type === 'recovery') {
+      setTokenProcessed(true)
       // Set the session with the tokens
       supabase.auth.setSession({
         access_token: accessToken,
@@ -38,6 +43,7 @@ export default function ResetPassword() {
         setVerifying(false)
       })
     } else {
+      setTokenProcessed(true)
       console.error('❌ Missing tokens or invalid type')
       setError('Invalid reset link. Please request a new password reset.')
       setVerifying(false)
