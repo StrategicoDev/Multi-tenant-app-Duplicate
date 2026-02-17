@@ -62,7 +62,7 @@ export default function ForgotPassword() {
             <h1 className="text-center text-3xl font-bold text-gray-900 mb-2">
             Multi-Tenant-App
           </h1>
-          <p className="mt-6 text-center text-3xl font-extrabold text-gray-600">
+          <p className="mt-6 text-center text-3xl text-gray-600">
             Reset your password
           </p>
           <p className="mt-2 text-center text-sm text-gray-600">
