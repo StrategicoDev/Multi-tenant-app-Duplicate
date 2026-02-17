@@ -132,13 +132,16 @@ export default function Register() {
               className="h-16 w-16 object-contain"
             />
           </div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+          <h1 className="text-center text-3xl font-bold text-gray-900 mb-2">
+            Multi-Tenant-App
+          </h1>
+          <p className="text-center text-gray-900 mb-2">
             Create your organization
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
+          </p>
+          <p className="text-center text-sm text-gray-600">
             Start your own organization and invite team members
           </p>
-          <p className="mt-1 text-center text-xs text-gray-500">
+          <p className="text-center text-xs text-gray-500">
             Already have an invitation? Check your email for the invite link
           </p>
         </div>

@@ -66,9 +66,12 @@ export default function Login() {
               className="h-16 w-16 object-contain"
             />
           </div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+          <h1 className="text-center text-3xl font-bold text-gray-900 mb-2">
+            Multi-Tenant-App
+          </h1>
+          <p className="text-center text-gray-600">
             Sign in to your account
-          </h2>
+          </p>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           {error && (
