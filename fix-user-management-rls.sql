@@ -37,27 +37,33 @@ CREATE POLICY "profile_insert_policy"
   ON profiles FOR INSERT
   WITH CHECK (id = auth.uid());
 
--- UPDATE: Users can update their own profile, owners and admins can update anyone in their tenant
+-- UPDATE: Users can update their own profile, owners can update anyone in their tenant, admins can update non-owners
 CREATE POLICY "profile_update_policy"
   ON profiles FOR UPDATE
   USING (
     id = auth.uid()
     OR
-    (public.current_user_role() IN ('owner', 'admin') AND tenant_id = public.current_user_tenant_id())
+    (public.current_user_role() = 'owner' AND tenant_id = public.current_user_tenant_id())
+    OR
+    (public.current_user_role() = 'admin' AND tenant_id = public.current_user_tenant_id() AND role != 'owner')
   )
   WITH CHECK (
     id = auth.uid()
     OR
-    (public.current_user_role() IN ('owner', 'admin') AND tenant_id = public.current_user_tenant_id())
+    (public.current_user_role() = 'owner' AND tenant_id = public.current_user_tenant_id())
+    OR
+    (public.current_user_role() = 'admin' AND tenant_id = public.current_user_tenant_id() AND role != 'owner')
   );
 
--- DELETE: Users can delete their own profile, owners and admins can delete anyone in their tenant
+-- DELETE: Users can delete their own profile, owners can delete anyone in their tenant, admins can delete non-owners
 CREATE POLICY "profile_delete_policy"
   ON profiles FOR DELETE
   USING (
     id = auth.uid()
     OR
-    (public.current_user_role() IN ('owner', 'admin') AND tenant_id = public.current_user_tenant_id())
+    (public.current_user_role() = 'owner' AND tenant_id = public.current_user_tenant_id())
+    OR
+    (public.current_user_role() = 'admin' AND tenant_id = public.current_user_tenant_id() AND role != 'owner')
   );
 
 -- Verify the policies

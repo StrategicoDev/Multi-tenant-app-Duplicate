@@ -1,9 +1,32 @@
+import { useState, useEffect } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 import DashboardLayout from '../../components/DashboardLayout'
 import UserManagement from '../../components/UserManagement'
+import { supabase } from '../../lib/supabase'
 
 export default function AdminDashboard() {
   const { user, tenant } = useAuth()
+  const [userCount, setUserCount] = useState(0)
+
+  useEffect(() => {
+    fetchUserCount()
+  }, [tenant?.id])
+
+  const fetchUserCount = async () => {
+    if (!tenant?.id) return
+    
+    try {
+      const { count, error } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true })
+        .eq('tenant_id', tenant.id)
+      
+      if (error) throw error
+      setUserCount(count || 0)
+    } catch (error) {
+      console.error('Error fetching user count:', error)
+    }
+  }
 
   return (
     <DashboardLayout>
@@ -43,7 +66,7 @@ export default function AdminDashboard() {
                     <dt className="text-sm font-medium text-gray-500 truncate">
                       Team Members
                     </dt>
-                    <dd className="text-lg font-medium text-gray-900">28</dd>
+                    <dd className="text-lg font-medium text-gray-900">{userCount}</dd>
                   </dl>
                 </div>
               </div>
@@ -119,6 +142,7 @@ export default function AdminDashboard() {
             tenantId={tenant.id}
             currentUserId={user.id}
             currentUserRole={user.role}
+            onUserChange={fetchUserCount}
           />
         )}
 

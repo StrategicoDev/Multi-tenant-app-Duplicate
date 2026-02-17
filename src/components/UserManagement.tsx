@@ -6,13 +6,14 @@ interface UserManagementProps {
   tenantId: string
   currentUserId: string
   currentUserRole: UserRole
+  onUserChange?: () => void
 }
 
 interface UserWithProfile extends User {
   canEdit: boolean
 }
 
-export default function UserManagement({ tenantId, currentUserId, currentUserRole }: UserManagementProps) {
+export default function UserManagement({ tenantId, currentUserId, currentUserRole, onUserChange }: UserManagementProps) {
   const [users, setUsers] = useState<UserWithProfile[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -72,9 +73,15 @@ export default function UserManagement({ tenantId, currentUserId, currentUserRol
     // Cannot edit yourself
     if (targetUser.id === currentId) return false
     
-    // Owner and Admin can edit everyone except themselves
-    if (currentRole === 'owner' || currentRole === 'admin') return true
+    // Owners can edit everyone
+    if (currentRole === 'owner') return true
     
+    // Admins can edit Members and other Admins, but NOT Owners
+    if (currentRole === 'admin') {
+      return targetUser.role !== 'owner'
+    }
+    
+    // Members cannot edit anyone
     return false
   }
 
@@ -110,6 +117,7 @@ export default function UserManagement({ tenantId, currentUserId, currentUserRol
 
       setUsers(sortedUsers)
       alert('User role updated successfully!')
+      onUserChange?.()
     } catch (error: any) {
       console.error('Error updating user role:', error)
       setError('Failed to update user role: ' + error.message)
@@ -136,6 +144,7 @@ export default function UserManagement({ tenantId, currentUserId, currentUserRol
 
       setUsers(users.filter(u => u.id !== userId))
       alert('User removed successfully!')
+      onUserChange?.()
     } catch (error: any) {
       console.error('Error removing user:', error)
       setError('Failed to remove user: ' + error.message)

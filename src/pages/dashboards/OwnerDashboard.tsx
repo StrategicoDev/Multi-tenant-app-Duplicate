@@ -13,10 +13,28 @@ export default function OwnerDashboard() {
   const [inviteMessage, setInviteMessage] = useState('')
   const [invitations, setInvitations] = useState<Invitation[]>([])
   const [loadingInvitations, setLoadingInvitations] = useState(true)
+  const [userCount, setUserCount] = useState(0)
 
   useEffect(() => {
     fetchInvitations()
+    fetchUserCount()
   }, [tenant?.id])
+
+  const fetchUserCount = async () => {
+    if (!tenant?.id) return
+    
+    try {
+      const { count, error } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true })
+        .eq('tenant_id', tenant.id)
+      
+      if (error) throw error
+      setUserCount(count || 0)
+    } catch (error) {
+      console.error('Error fetching user count:', error)
+    }
+  }
 
   const fetchInvitations = async () => {
     if (!tenant?.id) return
@@ -144,7 +162,7 @@ export default function OwnerDashboard() {
                     <dt className="text-sm font-medium text-gray-500 truncate">
                       Total Users
                     </dt>
-                    <dd className="text-lg font-medium text-gray-900">245</dd>
+                    <dd className="text-lg font-medium text-gray-900">{userCount}</dd>
                   </dl>
                 </div>
               </div>
@@ -324,6 +342,7 @@ export default function OwnerDashboard() {
             tenantId={tenant.id}
             currentUserId={user.id}
             currentUserRole={user.role}
+            onUserChange={fetchUserCount}
           />
         )}
 
