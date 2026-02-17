@@ -19,10 +19,13 @@ code {
 .btn-primary {
   background: #669900;
   color: white;
-  padding: 0.5rem 1rem;
+  padding: 0.75rem 1rem;
   border-radius: 0.375rem;
   font-weight: 500;
+  font-size: 1rem;
   transition: background-color 0.2s;
+  min-height: 44px;
+  touch-action: manipulation;
 }
 
 .btn-primary:hover {
@@ -37,7 +40,12 @@ code {
 .btn-link {
   color: #669900;
   font-weight: 500;
+  font-size: 0.875rem;
   transition: color 0.2s;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  touch-action: manipulation;
 }
 
 .btn-link:hover {
@@ -50,16 +58,28 @@ code {
   align-items: center;
   justify-content: center;
   background-color: #f9fafb;
-  padding: 3rem 1rem;
+  padding: 1rem;
+}
+
+@media (min-width: 640px) {
+  .auth-container {
+    padding: 2rem 1rem;
+  }
 }
 
 .auth-box {
   background: white;
-  padding: 2.5rem;
+  padding: 1.5rem;
   border-radius: 0.5rem;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   max-width: 28rem;
   width: 100%;
+}
+
+@media (min-width: 640px) {
+  .auth-box {
+    padding: 2.5rem;
+  }
 }
 
 input:focus,
@@ -69,4 +89,35 @@ select:focus {
   border-color: #669900;
   box-shadow: 0 0 0 3px rgba(102, 153, 0, 0.1);
   background-color: #f0f4ff;
+}
+
+/* Mobile-first input styles */
+input,
+textarea,
+select {
+  font-size: 16px;
+  min-height: 44px;
+}
+
+@media (min-width: 640px) {
+  input,
+  textarea,
+  select {
+    font-size: 0.875rem;
+  }
+}
+
+/* Ensure proper viewport on mobile */
+@media (max-width: 639px) {
+  body {
+    font-size: 16px;
+  }
+  
+  h1 {
+    font-size: 1.875rem;
+  }
+  
+  h2 {
+    font-size: 1.5rem;
+  }
 }
