@@ -115,7 +115,7 @@ export default function Login() {
             <div className="text-sm">
               <Link
                 to="/forgot-password"
-                className="font-medium text-indigo-600 hover:text-indigo-500"
+                className="btn-link"
               >
                 Forgot your password?
               </Link>
@@ -136,7 +136,7 @@ export default function Login() {
             <span className="text-gray-600">Don't have an account? </span>
             <Link
               to="/register"
-              className="font-medium text-indigo-600 hover:text-indigo-500"
+              className="btn-link"
             >
               Sign up
             </Link>

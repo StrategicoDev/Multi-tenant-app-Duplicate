@@ -33,3 +33,13 @@ code {
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+.btn-link {
+  color: #669900;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.btn-link:hover {
+  color: #557700;
+}

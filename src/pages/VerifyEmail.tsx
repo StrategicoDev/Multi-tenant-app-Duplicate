@@ -141,7 +141,7 @@ export default function VerifyEmail() {
               </button>
               <button
                 onClick={() => navigate('/login')}
-                className="w-full text-sm font-medium text-indigo-600 hover:text-indigo-500"
+                className="btn-link w-full text-sm"
               >
                 Go to login
               </button>

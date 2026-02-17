@@ -224,7 +224,7 @@ export default function AcceptInvite() {
           <div className="text-center text-sm">
             <Link
               to="/login"
-              className="font-medium text-indigo-600 hover:text-indigo-500"
+              className="btn-link"
             >
               Already have an account? Sign in
             </Link>

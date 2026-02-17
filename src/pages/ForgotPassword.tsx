@@ -37,7 +37,7 @@ export default function ForgotPassword() {
             </p>
             <Link
               to="/login"
-              className="text-sm font-medium text-indigo-600 hover:text-indigo-500"
+              className="btn-link text-sm"
             >
               Back to login
             </Link>
@@ -102,7 +102,7 @@ export default function ForgotPassword() {
           <div className="text-center text-sm">
             <Link
               to="/login"
-              className="font-medium text-indigo-600 hover:text-indigo-500"
+              className="btn-link"
             >
               Back to login
             </Link>
