@@ -198,20 +198,20 @@ export default function UserManagement({ tenantId, currentUserId, currentUserRol
         </div>
       )}
 
-      <div className="overflow-hidden">
+      <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th scope="col" className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 User
               </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th scope="col" className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Role
               </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th scope="col" className="hidden sm:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Joined
               </th>
-              <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th scope="col" className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Actions
               </th>
             </tr>
@@ -226,32 +226,32 @@ export default function UserManagement({ tenantId, currentUserId, currentUserRol
             ) : (
               users.map((user) => (
                 <tr key={user.id} className={user.id === currentUserId ? 'bg-indigo-50' : ''}>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
-                      <div className="flex-shrink-0 h-10 w-10 rounded-full bg-indigo-600 flex items-center justify-center">
-                        <span className="text-white font-medium text-sm">
+                      <div className="flex-shrink-0 h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-indigo-600 flex items-center justify-center">
+                        <span className="text-white font-medium text-xs sm:text-sm">
                           {user.email.charAt(0).toUpperCase()}
                         </span>
                       </div>
-                      <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">
+                      <div className="ml-2 sm:ml-4">
+                        <div className="text-xs sm:text-sm font-medium text-gray-900">
                           {user.email}
                           {user.id === currentUserId && (
-                            <span className="ml-2 text-xs text-gray-500">(You)</span>
+                            <span className="ml-1 sm:ml-2 text-xs text-gray-500">(You)</span>
                           )}
                         </div>
-                        <div className="text-sm text-gray-500">
+                        <div className="text-xs text-gray-500 hidden sm:block">
                           ID: {user.id.substring(0, 8)}...
                         </div>
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
                     {user.canEdit && updatingUserId !== user.id ? (
                       <select
                         value={user.role}
                         onChange={(e) => updateUserRole(user.id, e.target.value as UserRole)}
-                        className="text-sm rounded-full px-3 py-1 font-semibold border-2 border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                        className="text-xs sm:text-sm rounded-full px-2 sm:px-3 py-1 font-semibold border-2 border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
                         disabled={updatingUserId === user.id}
                       >
                         {(currentUserRole === 'owner' || currentUserRole === 'admin') && <option value="owner">Owner</option>}
@@ -259,15 +259,15 @@ export default function UserManagement({ tenantId, currentUserId, currentUserRol
                         <option value="member">Member</option>
                       </select>
                     ) : (
-                      <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${getRoleBadgeColor(user.role)}`}>
+                      <span className={`inline-flex rounded-full px-2 sm:px-3 py-1 text-xs font-semibold ${getRoleBadgeColor(user.role)}`}>
                         {user.role}
                       </span>
                     )}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="hidden sm:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {new Date(user.created_at).toLocaleDateString()}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                  <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-right text-xs sm:text-sm font-medium">
                     {user.canEdit && (
                       <button
                         onClick={() => removeUser(user.id, user.email)}
@@ -285,8 +285,8 @@ export default function UserManagement({ tenantId, currentUserId, currentUserRol
         </table>
       </div>
 
-      <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
-        <div className="text-sm text-gray-500">
+      <div className="px-4 sm:px-6 py-4 bg-gray-50 border-t border-gray-200">
+        <div className="text-xs sm:text-sm text-gray-500">
           <strong>Total users:</strong> {users.length}
           {' • '}
           <strong>Owners:</strong> {users.filter(u => u.role === 'owner').length}
