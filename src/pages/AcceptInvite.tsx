@@ -110,7 +110,7 @@ export default function AcceptInvite() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="auth-container">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
       </div>
     )
@@ -118,8 +118,8 @@ export default function AcceptInvite() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md w-full space-y-8">
+      <div className="auth-container">
+        <div className="auth-box">
           <div className="rounded-md bg-red-50 p-4">
             <h3 className="text-lg font-medium text-red-800 mb-2">Invalid Invitation</h3>
             <p className="text-sm text-red-700">{error}</p>
@@ -137,15 +137,15 @@ export default function AcceptInvite() {
 
   if (!invitation) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="auth-container">
         <p className="text-gray-600">Invitation not found</p>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
+    <div className="auth-container">
+      <div className="auth-box">
         <div>
           {/* Logo */}
           <div className="flex justify-center mb-6">

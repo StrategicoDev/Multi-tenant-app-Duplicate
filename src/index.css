@@ -43,3 +43,21 @@ code {
 .btn-link:hover {
   color: #557700;
 }
+
+.auth-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f9fafb;
+  padding: 3rem 1rem;
+}
+
+.auth-box {
+  background: white;
+  padding: 2.5rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  max-width: 28rem;
+  width: 100%;
+}

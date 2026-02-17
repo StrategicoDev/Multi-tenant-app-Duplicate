@@ -26,8 +26,8 @@ export default function ForgotPassword() {
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md w-full">
+      <div className="auth-container">
+        <div className="auth-box">
           <div className="rounded-md bg-green-50 p-4">
             <h3 className="text-lg font-medium text-green-800 mb-2">
               Check your email
@@ -48,8 +48,8 @@ export default function ForgotPassword() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
+    <div className="auth-container">
+      <div className="auth-box">
         <div>
           {/* Logo */}
           <div className="flex justify-center mb-6">
