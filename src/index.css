@@ -61,3 +61,12 @@ code {
   max-width: 28rem;
   width: 100%;
 }
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: #669900;
+  box-shadow: 0 0 0 3px rgba(102, 153, 0, 0.1);
+  background-color: #f0f4ff;
+}
