@@ -135,7 +135,7 @@ export default function VerifyEmail() {
             <div className="space-y-2">
               <button
                 onClick={() => navigate('/register')}
-                className="w-full text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded"
+                className="btn-primary w-full"
               >
                 Register again
               </button>

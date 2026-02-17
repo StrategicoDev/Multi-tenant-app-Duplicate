@@ -126,7 +126,7 @@ export default function AcceptInvite() {
           </div>
           <Link
             to="/login"
-            className="w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
+            className="btn-primary w-full flex justify-center"
           >
             Go to Login
           </Link>
@@ -215,7 +215,7 @@ export default function AcceptInvite() {
             <button
               type="submit"
               disabled={accepting}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+              className="btn-primary w-full flex justify-center"
             >
               {accepting ? 'Creating Account...' : 'Accept & Create Account'}
             </button>
