@@ -150,7 +150,55 @@ SET tenant_id = (SELECT id FROM public.tenants LIMIT 1)
 WHERE tenant_id NOT IN (SELECT id FROM public.tenants);
 ```
 
-## Step 4: Verify Everything Works
+## Step 4: Auto-Mark Expired Invitations
+
+This automatically marks invitations as 'expired' when they pass their expiry date, and adds visual indicators in the dashboard.
+
+```sql
+-- Automatically mark expired invitations
+-- This function checks and updates invitation status from 'pending' to 'expired' when they expire
+
+-- Create function to mark expired invitations
+CREATE OR REPLACE FUNCTION mark_expired_invitations()
+RETURNS void AS $$
+BEGIN
+  UPDATE public.invitations
+  SET status = 'expired'
+  WHERE status = 'pending'
+    AND expires_at < NOW();
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Create a trigger function that runs before SELECT to ensure expired invitations are marked
+CREATE OR REPLACE FUNCTION check_invitation_expiry()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF NEW.status = 'pending' AND NEW.expires_at < NOW() THEN
+    NEW.status := 'expired';
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Create trigger that runs before insert/update
+DROP TRIGGER IF EXISTS invitation_expiry_check ON invitations;
+CREATE TRIGGER invitation_expiry_check
+  BEFORE INSERT OR UPDATE ON invitations
+  FOR EACH ROW
+  EXECUTE FUNCTION check_invitation_expiry();
+
+-- Run once to update existing expired invitations
+SELECT mark_expired_invitations();
+```
+
+**What this does:**
+- Automatically marks expired invitations with status='expired'
+- Shows expired invitations with red background in dashboard
+- Expired invitations show "Expired" badge and "Delete" button
+- Trigger ensures new/updated invitations are checked for expiry
+- Invitations expire after 7 days by default
+
+## Step 5: Verify Everything Works
 
 Run this query to check your setup:
 

@@ -40,6 +40,9 @@ export default function OwnerDashboard() {
     if (!tenant?.id) return
     
     try {
+      // Mark expired invitations first
+      await supabase.rpc('mark_expired_invitations')
+      
       const { data, error } = await supabase
         .from('invitations')
         .select('*')
@@ -286,14 +289,14 @@ export default function OwnerDashboard() {
             </div>
           </form>
 
-          {/* Pending Invitations */}
+          {/* Pending & Expired Invitations */}
           <div className="mt-8">
-            <h3 className="text-sm font-medium text-gray-900 mb-3">Pending Invitations</h3>
+            <h3 className="text-sm font-medium text-gray-900 mb-3">Invitations</h3>
             
             {loadingInvitations ? (
               <p className="text-sm text-gray-500">Loading invitations...</p>
-            ) : invitations.filter(i => i.status === 'pending').length === 0 ? (
-              <p className="text-sm text-gray-500">No pending invitations</p>
+            ) : invitations.filter(i => i.status === 'pending' || i.status === 'expired').length === 0 ? (
+              <p className="text-sm text-gray-500">No pending or expired invitations</p>
             ) : (
               <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
                 <table className="min-w-full divide-y divide-gray-300">
@@ -301,6 +304,7 @@ export default function OwnerDashboard() {
                     <tr>
                       <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Email</th>
                       <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Role</th>
+                      <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Status</th>
                       <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Sent</th>
                       <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Expires</th>
                       <th className="relative py-3.5 pl-3 pr-4 sm:pr-6">
@@ -309,26 +313,44 @@ export default function OwnerDashboard() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200 bg-white">
-                    {invitations.filter(i => i.status === 'pending').map((invitation) => (
-                      <tr key={invitation.id}>
-                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-900">{invitation.email}</td>
-                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 capitalize">{invitation.role}</td>
-                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                          {new Date(invitation.created_at).toLocaleDateString()}
-                        </td>
-                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                          {new Date(invitation.expires_at).toLocaleDateString()}
-                        </td>
-                        <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
-                          <button
-                            onClick={() => cancelInvitation(invitation.id)}
-                            className="text-red-600 hover:text-red-900"
-                          >
-                            Cancel
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
+                    {invitations.filter(i => i.status === 'pending' || i.status === 'expired').map((invitation) => {
+                      const isExpired = invitation.status === 'expired' || new Date(invitation.expires_at) < new Date()
+                      return (
+                        <tr key={invitation.id} className={isExpired ? 'bg-red-50' : ''}>
+                          <td className={`whitespace-nowrap px-3 py-4 text-sm ${isExpired ? 'text-red-900' : 'text-gray-900'}`}>
+                            {invitation.email}
+                          </td>
+                          <td className={`whitespace-nowrap px-3 py-4 text-sm capitalize ${isExpired ? 'text-red-700' : 'text-gray-500'}`}>
+                            {invitation.role}
+                          </td>
+                          <td className="whitespace-nowrap px-3 py-4 text-sm">
+                            {isExpired ? (
+                              <span className="inline-flex rounded-full bg-red-100 px-2 text-xs font-semibold leading-5 text-red-800">
+                                Expired
+                              </span>
+                            ) : (
+                              <span className="inline-flex rounded-full bg-green-100 px-2 text-xs font-semibold leading-5 text-green-800">
+                                Pending
+                              </span>
+                            )}
+                          </td>
+                          <td className={`whitespace-nowrap px-3 py-4 text-sm ${isExpired ? 'text-red-600' : 'text-gray-500'}`}>
+                            {new Date(invitation.created_at).toLocaleDateString()}
+                          </td>
+                          <td className={`whitespace-nowrap px-3 py-4 text-sm ${isExpired ? 'text-red-600 font-semibold' : 'text-gray-500'}`}>
+                            {new Date(invitation.expires_at).toLocaleDateString()}
+                          </td>
+                          <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
+                            <button
+                              onClick={() => cancelInvitation(invitation.id)}
+                              className="text-red-600 hover:text-red-900"
+                            >
+                              {isExpired ? 'Delete' : 'Cancel'}
+                            </button>
+                          </td>
+                        </tr>
+                      )
+                    })}
                   </tbody>
                 </table>
               </div>
