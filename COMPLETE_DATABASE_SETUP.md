@@ -52,89 +52,69 @@ CREATE POLICY "invitation_select_policy"
 
 This allows owners and admins to view, edit roles, and remove users.
 
-```sql
--- RLS Policies for User Management
-DROP POLICY IF EXISTS "profile_update_own" ON profiles;
-DROP POLICY IF EXISTS "profile_delete_own" ON profiles;
-DROP POLICY IF EXISTS "profile_select_own" ON profiles;
+**IMPORTANT:** This uses helper functions to avoid infinite recursion in RLS policies.
 
--- Allow users to view profiles in their tenant
+```sql
+-- Fix infinite recursion in RLS policies
+-- Create helper functions that bypass RLS
+
+-- Drop existing problematic policies
+DROP POLICY IF EXISTS "profile_select_policy" ON profiles;
+DROP POLICY IF EXISTS "profile_select_own" ON profiles;
+DROP POLICY IF EXISTS "profile_update_policy" ON profiles;
+DROP POLICY IF EXISTS "profile_update_own" ON profiles;
+DROP POLICY IF EXISTS "profile_delete_policy" ON profiles;
+DROP POLICY IF EXISTS "profile_delete_own" ON profiles;
+DROP POLICY IF EXISTS "profile_insert_policy" ON profiles;
+
+-- Create helper function to get current user's tenant_id (bypasses RLS)
+CREATE OR REPLACE FUNCTION public.current_user_tenant_id()
+RETURNS UUID AS $$
+  SELECT tenant_id FROM public.profiles WHERE id = auth.uid() LIMIT 1
+$$ LANGUAGE sql SECURITY DEFINER STABLE;
+
+-- Create helper function to get current user's role (bypasses RLS)
+CREATE OR REPLACE FUNCTION public.current_user_role()
+RETURNS TEXT AS $$
+  SELECT role FROM public.profiles WHERE id = auth.uid() LIMIT 1
+$$ LANGUAGE sql SECURITY DEFINER STABLE;
+
+-- SELECT: Users can view their own profile and profiles in their tenant
 CREATE POLICY "profile_select_policy"
   ON profiles FOR SELECT
   USING (
     id = auth.uid()
     OR
-    tenant_id IN (
-      SELECT tenant_id FROM profiles WHERE id = auth.uid()
-    )
+    tenant_id = public.current_user_tenant_id()
   );
 
--- Allow owners and admins to update users
+-- INSERT: Users can create their own profile
+CREATE POLICY "profile_insert_policy"
+  ON profiles FOR INSERT
+  WITH CHECK (id = auth.uid());
+
+-- UPDATE: Users can update their own profile, owners and admins can update anyone in their tenant
 CREATE POLICY "profile_update_policy"
   ON profiles FOR UPDATE
   USING (
     id = auth.uid()
     OR
-    EXISTS (
-      SELECT 1 FROM profiles p
-      WHERE p.id = auth.uid()
-      AND p.tenant_id = profiles.tenant_id
-      AND p.role = 'owner'
-    )
-    OR
-    EXISTS (
-      SELECT 1 FROM profiles p
-      WHERE p.id = auth.uid()
-      AND p.tenant_id = profiles.tenant_id
-      AND p.role = 'admin'
-      AND profiles.role = 'member'
-    )
+    (public.current_user_role() IN ('owner', 'admin') AND tenant_id = public.current_user_tenant_id())
   )
   WITH CHECK (
     id = auth.uid()
     OR
-    EXISTS (
-      SELECT 1 FROM profiles p
-      WHERE p.id = auth.uid()
-      AND p.tenant_id = profiles.tenant_id
-      AND p.role = 'owner'
-    )
-    OR
-    EXISTS (
-      SELECT 1 FROM profiles p
-      WHERE p.id = auth.uid()
-      AND p.tenant_id = profiles.tenant_id
-      AND p.role = 'admin'
-      AND profiles.role = 'member'
-    )
+    (public.current_user_role() IN ('owner', 'admin') AND tenant_id = public.current_user_tenant_id())
   );
 
--- Allow owners and admins to delete users
+-- DELETE: Users can delete their own profile, owners and admins can delete anyone in their tenant
 CREATE POLICY "profile_delete_policy"
   ON profiles FOR DELETE
   USING (
     id = auth.uid()
     OR
-    EXISTS (
-      SELECT 1 FROM profiles p
-      WHERE p.id = auth.uid()
-      AND p.tenant_id = profiles.tenant_id
-      AND p.role = 'owner'
-    )
-    OR
-    EXISTS (
-      SELECT 1 FROM profiles p
-      WHERE p.id = auth.uid()
-      AND p.tenant_id = profiles.tenant_id
-      AND p.role = 'admin'
-      AND profiles.role = 'member'
-    )
+    (public.current_user_role() IN ('owner', 'admin') AND tenant_id = public.current_user_tenant_id())
   );
-
--- Keep INSERT policy for new users
-CREATE POLICY "profile_insert_policy"
-  ON profiles FOR INSERT
-  WITH CHECK (id = auth.uid());
 ```
 
 ## Step 3: Fix Missing Profiles (If Applicable)
@@ -220,8 +200,8 @@ After applying these changes:
 - Owners can change any user's role (owner/admin/member)
 - Owners can remove users from the tenant
 - Admins can view all users in their tenant
-- Admins can change member roles
-- Admins can remove members
+- Admins can change any user's role (owner/admin/member)
+- Admins can remove users from the tenant
 
 ✅ **Security**
 - All data is tenant-isolated
@@ -251,11 +231,18 @@ After applying these changes:
    - Log in as admin
    - Go to Admin Dashboard
    - View "Team Members" section
-   - Verify you can only edit members (not owners/other admins)
-   - Change a member's role
-   - Verify you cannot edit owners
+   - Verify you can edit all users (including owners and other admins)
+   - Change any user's role (owner/admin/member)
+   - Remove users from the tenant
+   - Note: You cannot edit your own role
 
 ## Troubleshooting
+
+**Error: "infinite recursion detected in policy for relation 'profiles'"**
+- This means the RLS policies were creating circular dependencies
+- The old policies queried `profiles` table within the policy for `profiles` table
+- Solution: Use the helper functions version in Step 2 (already fixed above)
+- The helper functions use `SECURITY DEFINER` to bypass RLS and avoid recursion
 
 **Error: "permission denied for table users"**
 - This means Step 1 wasn't applied correctly

@@ -127,12 +127,12 @@ export default function AdminDashboard() {
           <h2 className="text-lg font-medium text-gray-900 mb-4">Admin Access & Capabilities</h2>
           <div className="prose max-w-none">
             <p className="text-gray-600 mb-4">
-              As an Admin, you can manage team members and oversee projects within your organization.
+              As an Admin, you have full user management privileges within your organization.
             </p>
             <ul className="space-y-3">
               <li className="flex items-start">
                 <span className="text-green-500 mr-2">✓</span>
-                <span className="text-gray-700">Manage team members and their permissions</span>
+                <span className="text-gray-700">Manage all team members and assign roles (owner/admin/member)</span>
               </li>
               <li className="flex items-start">
                 <span className="text-green-500 mr-2">✓</span>
@@ -149,6 +149,10 @@ export default function AdminDashboard() {
               <li className="flex items-start">
                 <span className="text-green-500 mr-2">✓</span>
                 <span className="text-gray-700">Assign tasks and monitor progress</span>
+              </li>
+              <li className="flex items-start">
+                <span className="text-green-500 mr-2">✓</span>
+                <span className="text-gray-700">Send invitations to new team members</span>
               </li>
             </ul>
             

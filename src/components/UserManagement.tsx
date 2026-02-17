@@ -22,6 +22,19 @@ export default function UserManagement({ tenantId, currentUserId, currentUserRol
     fetchUsers()
   }, [tenantId])
 
+  const getRolePrecedence = (role: UserRole): number => {
+    switch (role) {
+      case 'owner':
+        return 1
+      case 'admin':
+        return 2
+      case 'member':
+        return 3
+      default:
+        return 4
+    }
+  }
+
   const fetchUsers = async () => {
     try {
       setLoading(true)
@@ -29,7 +42,6 @@ export default function UserManagement({ tenantId, currentUserId, currentUserRol
         .from('profiles')
         .select('*')
         .eq('tenant_id', tenantId)
-        .order('created_at', { ascending: false })
 
       if (error) throw error
 
@@ -39,7 +51,15 @@ export default function UserManagement({ tenantId, currentUserId, currentUserRol
         canEdit: canEditUser(user, currentUserId, currentUserRole),
       }))
 
-      setUsers(usersWithPermissions)
+      // Sort by role precedence (Owner > Admin > Member), then by created_at
+      const sortedUsers = usersWithPermissions.sort((a, b) => {
+        const roleDiff = getRolePrecedence(a.role) - getRolePrecedence(b.role)
+        if (roleDiff !== 0) return roleDiff
+        // If same role, sort by created date (newest first)
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      })
+
+      setUsers(sortedUsers)
     } catch (error: any) {
       console.error('Error fetching users:', error)
       setError('Failed to load users')
@@ -52,11 +72,8 @@ export default function UserManagement({ tenantId, currentUserId, currentUserRol
     // Cannot edit yourself
     if (targetUser.id === currentId) return false
     
-    // Owner can edit everyone except themselves
-    if (currentRole === 'owner') return true
-    
-    // Admin can edit members only
-    if (currentRole === 'admin' && targetUser.role === 'member') return true
+    // Owner and Admin can edit everyone except themselves
+    if (currentRole === 'owner' || currentRole === 'admin') return true
     
     return false
   }
@@ -77,13 +94,21 @@ export default function UserManagement({ tenantId, currentUserId, currentUserRol
 
       if (error) throw error
 
-      // Update local state
-      setUsers(users.map(u => 
+      // Update local state and re-sort by role precedence
+      const updatedUsers = users.map(u => 
         u.id === userId 
           ? { ...u, role: newRole, canEdit: canEditUser({ ...u, role: newRole }, currentUserId, currentUserRole) }
           : u
-      ))
+      )
 
+      // Re-sort after role change
+      const sortedUsers = updatedUsers.sort((a, b) => {
+        const roleDiff = getRolePrecedence(a.role) - getRolePrecedence(b.role)
+        if (roleDiff !== 0) return roleDiff
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      })
+
+      setUsers(sortedUsers)
       alert('User role updated successfully!')
     } catch (error: any) {
       console.error('Error updating user role:', error)
@@ -220,7 +245,7 @@ export default function UserManagement({ tenantId, currentUserId, currentUserRol
                         className="text-sm rounded-full px-3 py-1 font-semibold border-2 border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
                         disabled={updatingUserId === user.id}
                       >
-                        {currentUserRole === 'owner' && <option value="owner">Owner</option>}
+                        {(currentUserRole === 'owner' || currentUserRole === 'admin') && <option value="owner">Owner</option>}
                         <option value="admin">Admin</option>
                         <option value="member">Member</option>
                       </select>

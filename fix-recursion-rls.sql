@@ -1,14 +1,10 @@
--- RLS Policies for User Management
--- This allows admins and owners to view and manage users in their tenant
--- FIXED: Uses helper functions to avoid infinite recursion
+-- Fix infinite recursion in RLS policies
+-- Create a security definer function to get current user's tenant_id without triggering RLS
 
--- Drop existing policies
+-- Drop existing problematic policies
 DROP POLICY IF EXISTS "profile_select_policy" ON profiles;
-DROP POLICY IF EXISTS "profile_select_own" ON profiles;
 DROP POLICY IF EXISTS "profile_update_policy" ON profiles;
-DROP POLICY IF EXISTS "profile_update_own" ON profiles;
 DROP POLICY IF EXISTS "profile_delete_policy" ON profiles;
-DROP POLICY IF EXISTS "profile_delete_own" ON profiles;
 DROP POLICY IF EXISTS "profile_insert_policy" ON profiles;
 
 -- Create helper function to get current user's tenant_id (bypasses RLS)
@@ -61,7 +57,7 @@ CREATE POLICY "profile_delete_policy"
   );
 
 -- Verify the policies
-SELECT schemaname, tablename, policyname, permissive, roles, cmd, qual
+SELECT schemaname, tablename, policyname, cmd
 FROM pg_policies
 WHERE tablename = 'profiles'
 ORDER BY policyname;
