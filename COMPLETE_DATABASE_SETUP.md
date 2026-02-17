@@ -2,7 +2,34 @@
 
 Apply these SQL scripts in your Supabase SQL Editor to fix all issues and enable user management.
 
-## Step 1: Fix Invitation RLS Policies
+## Step 1: Enable Multi-Tenant Support with Domain Enforcement (IMPORTANT)
+
+**This MUST be applied first!** This enables multi-tenant architecture with domain-based organization grouping.
+
+Go to: https://supabase.com/dashboard/project/soekhmeytdgmbvaardev/sql/new
+
+Copy and run the contents of [fix-multi-tenant-support.sql](fix-multi-tenant-support.sql)
+
+**What this does:**
+- Allows multiple independent organizations to be created
+- **Enforces one organization per email domain** (e.g., all @company.com users belong to the same organization)
+- First user from a domain becomes the owner and creates the organization
+- Additional users from the same domain MUST be invited by the owner
+- Users from different domains can create their own organizations
+- Enables true multi-tenant SaaS architecture with domain-based organization grouping
+
+**Key changes:**
+- New users from a new domain can create organizations (become owners)
+- Users from existing domains must use invitations to join
+- Each domain has one organization with clear ownership
+- Complete tenant isolation maintained
+
+**Example:**
+- john@company.com registers → Creates "Company Inc." organization, becomes owner
+- jane@company.com tries to register → Gets error, must be invited by john@company.com
+- bob@different.com registers → Creates "Different Corp." organization, becomes owner
+
+## Step 2: Fix Invitation RLS Policies
 
 This fixes the "permission denied" and RLS violation errors when creating invitations.
 
@@ -48,7 +75,7 @@ CREATE POLICY "invitation_select_policy"
   );
 ```
 
-## Step 2: Enable User Management
+## Step 3: Enable User Management
 
 This allows owners and admins to view, edit roles, and remove users.
 
@@ -117,7 +144,7 @@ CREATE POLICY "profile_delete_policy"
   );
 ```
 
-## Step 3: Fix Missing Profiles (If Applicable)
+## Step 4: Fix Missing Profiles (If Applicable)
 
 If you have users who are authenticated but don't have profiles, run this:
 
@@ -150,7 +177,7 @@ SET tenant_id = (SELECT id FROM public.tenants LIMIT 1)
 WHERE tenant_id NOT IN (SELECT id FROM public.tenants);
 ```
 
-## Step 4: Auto-Mark Expired Invitations
+## Step 5: Auto-Mark Expired Invitations
 
 This automatically marks invitations as 'expired' when they pass their expiry date, and adds visual indicators in the dashboard.
 
@@ -198,7 +225,7 @@ SELECT mark_expired_invitations();
 - Trigger ensures new/updated invitations are checked for expiry
 - Invitations expire after 7 days by default
 
-## Step 5: Verify Everything Works
+## Step 6: Verify Everything Works
 
 Run this query to check your setup:
 

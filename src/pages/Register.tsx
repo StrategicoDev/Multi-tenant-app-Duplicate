@@ -1,65 +1,23 @@
-import { useState, FormEvent, ChangeEvent, useEffect } from 'react'
+import { useState, FormEvent, ChangeEvent } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { UserRole } from '../types/auth'
 import { supabase } from '../lib/supabase'
 
 export default function Register() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
-  const [role, setRole] = useState<UserRole>('member') // Default to member
   const [tenantName, setTenantName] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
-  const [checkingTenant, setCheckingTenant] = useState(true)
-  const [tenantExists, setTenantExists] = useState(false)
-  const [existingTenantName, setExistingTenantName] = useState('')
   const { signUp } = useAuth()
   const navigate = useNavigate()
-
-  // Check if tenant exists on component mount
-  useEffect(() => {
-    checkTenantExistence()
-  }, [])
-
-  const checkTenantExistence = async () => {
-    try {
-      console.log('🔍 Checking if tenant exists...')
-      const { data, error } = await supabase.rpc('check_tenant_exists')
-      
-      if (error) {
-        console.error('Error checking tenant:', error)
-        return
-      }
-      
-      console.log('Tenant check result:', data)
-      
-      if (data && data.length > 0) {
-        const result = data[0]
-        setTenantExists(result.tenant_exists)
-        setExistingTenantName(result.tenant_name || '')
-        
-        if (result.tenant_exists) {
-          console.log('✅ Tenant exists:', result.tenant_name)
-          setRole('member') // Default to member for additional users
-        } else {
-          console.log('✅ No tenant exists - first user will be owner')
-          setRole('owner') // First user is owner
-        }
-      }
-    } catch (err) {
-      console.error('Exception checking tenant:', err)
-    } finally {
-      setCheckingTenant(false)
-    }
-  }
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     console.log('🚀 Registration started')
-    console.log('Registration details:', { email, role, tenantName })
+    console.log('Registration details:', { email, tenantName })
     
     setError('')
     setLoading(true)
@@ -78,9 +36,42 @@ export default function Register() {
       return
     }
 
+    if (!tenantName || tenantName.trim() === '') {
+      console.error('❌ Validation failed: Organization name required')
+      setError('Organization name is required')
+      setLoading(false)
+      return
+    }
+
+    // Check if email domain already has an organization
+    try {
+      console.log('🔍 Checking if email domain already has an organization...')
+      const { data: domainCheck, error: domainError } = await supabase.rpc('check_domain_has_organization', {
+        user_email: email
+      })
+
+      if (domainError) {
+        console.error('Error checking domain:', domainError)
+        // Continue with registration if check fails (fail open)
+      } else if (domainCheck && domainCheck.length > 0 && domainCheck[0].has_organization) {
+        const { tenant_name, owner_email } = domainCheck[0]
+        console.error('❌ Domain already has organization:', tenant_name)
+        setError(
+          `An organization with your email domain already exists${tenant_name ? ` (${tenant_name})` : ''}. ` +
+          `Please contact your organization owner${owner_email ? ` (${owner_email})` : ''} for an invitation.`
+        )
+        setLoading(false)
+        return
+      }
+    } catch (domainCheckErr) {
+      console.error('Exception checking domain:', domainCheckErr)
+      // Continue with registration if check fails (fail open)
+    }
+
     console.log('✅ Validation passed, calling signUp...')
     try {
-      await signUp(email, password, role, tenantName || undefined)
+      // Always register as owner with tenant name for new tenants
+      await signUp(email, password, 'owner', tenantName)
       console.log('✅ Registration successful!')
       setSuccess(true)
       setTimeout(() => navigate('/login'), 3000)
@@ -115,7 +106,7 @@ export default function Register() {
               Registration successful!
             </h3>
             <p className="text-sm text-green-700 mb-2">
-              Your account has been created{tenantExists ? ` and you've been added to ${existingTenantName}` : ' as the organization owner'}.
+              Your organization "{tenantName}" has been created and you are the owner.
             </p>
             <p className="text-sm text-green-700 mb-4">
               Please check your email for a verification link. Once you click the link, you'll be automatically logged in and redirected to your dashboard.
@@ -129,30 +120,19 @@ export default function Register() {
     )
   }
 
-  if (checkingTenant) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md w-full">
-          <div className="text-center">
-            <p className="text-gray-600">Loading...</p>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            {tenantExists ? `Join ${existingTenantName}` : 'Create your account'}
+            Create your organization
           </h2>
-          {tenantExists && (
-            <p className="mt-2 text-center text-sm text-gray-600">
-              You're signing up to join an existing organization
-            </p>
-          )}
+          <p className="mt-2 text-center text-sm text-gray-600">
+            Start your own organization and invite team members
+          </p>
+          <p className="mt-1 text-center text-xs text-gray-500">
+            Already have an invitation? Check your email for the invite link
+          </p>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           {error && (
@@ -161,41 +141,24 @@ export default function Register() {
             </div>
           )}
           <div className="space-y-4">
-            {!tenantExists && (
-              <div>
-                <label htmlFor="tenant-name" className="block text-sm font-medium text-gray-700">
-                  Organization Name
-                </label>
-                <input
-                  id="tenant-name"
-                  name="tenant-name"
-                  type="text"
-                  className="mt-1 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                  placeholder="My Organization"
-                  value={tenantName}
-                  onChange={(e: ChangeEvent<HTMLInputElement>) => setTenantName(e.target.value)}
-                />
-              </div>
-            )}
-
-            {tenantExists && (
-              <div>
-                <label htmlFor="existing-tenant" className="block text-sm font-medium text-gray-700">
-                  Organization
-                </label>
-                <input
-                  id="existing-tenant"
-                  name="existing-tenant"
-                  type="text"
-                  disabled
-                  className="mt-1 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-100 text-gray-600 sm:text-sm"
-                  value={existingTenantName}
-                />
-                <p className="mt-1 text-xs text-gray-500">
-                  You will be added to this existing organization
-                </p>
-              </div>
-            )}
+            <div>
+              <label htmlFor="tenant-name" className="block text-sm font-medium text-gray-700">
+                Organization Name *
+              </label>
+              <input
+                id="tenant-name"
+                name="tenant-name"
+                type="text"
+                required
+                className="mt-1 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                placeholder="My Organization"
+                value={tenantName}
+                onChange={(e: ChangeEvent<HTMLInputElement>) => setTenantName(e.target.value)}
+              />
+              <p className="mt-1 text-xs text-gray-500">
+                You will be the owner of this organization
+              </p>
+            </div>
 
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
@@ -247,34 +210,13 @@ export default function Register() {
                 onChange={(e: ChangeEvent<HTMLInputElement>) => setConfirmPassword(e.target.value)}
               />
             </div>
+          </div>
 
-            <div>
-              <label htmlFor="role" className="block text-sm font-medium text-gray-700">
-                Role
-              </label>
-              <select
-                id="role"
-                name="role"
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm disabled:bg-gray-100 disabled:text-gray-600"
-                value={role}
-                onChange={(e: ChangeEvent<HTMLSelectElement>) => setRole(e.target.value as UserRole)}
-                disabled={!tenantExists}
-              >
-                {!tenantExists ? (
-                  <option value="owner">Owner (First User)</option>
-                ) : (
-                  <>
-                    <option value="admin">Admin</option>
-                    <option value="member">Member</option>
-                  </>
-                )}
-              </select>
-              <p className="mt-1 text-xs text-gray-500">
-                {!tenantExists 
-                  ? 'Note: The first user automatically becomes the Owner and creates the organization.'
-                  : 'Select your role. Additional owners cannot be created during signup.'}
-              </p>
-            </div>
+          <div className="bg-blue-50 border border-blue-200 rounded-md p-3 mb-4">
+            <p className="text-sm text-blue-800">
+              💡 <strong>Note:</strong> You will be the owner of "{tenantName || 'your organization'}". 
+              After registration, you can invite team members as admins or members.
+            </p>
           </div>
 
           <div>
