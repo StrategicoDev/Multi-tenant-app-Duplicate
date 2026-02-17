@@ -52,12 +52,12 @@ export default function UserManagement({ tenantId, currentUserId, currentUserRol
         canEdit: canEditUser(user, currentUserId, currentUserRole),
       }))
 
-      // Sort by role precedence (Owner > Admin > Member), then by created_at
+      // Sort by role precedence (Owner > Admin > Member), then alphabetically by email
       const sortedUsers = usersWithPermissions.sort((a, b) => {
         const roleDiff = getRolePrecedence(a.role) - getRolePrecedence(b.role)
         if (roleDiff !== 0) return roleDiff
-        // If same role, sort by created date (newest first)
-        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        // If same role, sort alphabetically by email
+        return a.email.localeCompare(b.email)
       })
 
       setUsers(sortedUsers)
@@ -112,7 +112,7 @@ export default function UserManagement({ tenantId, currentUserId, currentUserRol
       const sortedUsers = updatedUsers.sort((a, b) => {
         const roleDiff = getRolePrecedence(a.role) - getRolePrecedence(b.role)
         if (roleDiff !== 0) return roleDiff
-        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        return a.email.localeCompare(b.email)
       })
 
       setUsers(sortedUsers)
