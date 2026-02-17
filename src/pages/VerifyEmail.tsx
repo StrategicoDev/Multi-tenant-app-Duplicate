@@ -96,19 +96,11 @@ export default function VerifyEmail() {
       <div className="max-w-md w-full space-y-8">
         {/* Logo */}
         <div className="flex justify-center">
-          <svg 
-            className="h-16 w-16" 
-            viewBox="0 0 64 64" 
-            fill="none" 
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <rect width="64" height="64" rx="12" fill="#4F46E5"/>
-            <path 
-              d="M32 16L20 28V48H28V36H36V48H44V28L32 16Z" 
-              fill="white"
-            />
-            <circle cx="32" cy="24" r="3" fill="#4F46E5"/>
-          </svg>
+          <img 
+            src="/logo.png" 
+            alt="Logo" 
+            className="h-16 w-16 object-contain"
+          />
         </div>
 
         {status === 'verifying' && (

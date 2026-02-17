@@ -60,19 +60,11 @@ export default function Login() {
         <div>
           {/* Logo */}
           <div className="flex justify-center mb-6">
-            <svg 
-              className="h-16 w-16" 
-              viewBox="0 0 64 64" 
-              fill="none" 
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <rect width="64" height="64" rx="12" fill="#4F46E5"/>
-              <path 
-                d="M32 16L20 28V48H28V36H36V48H44V28L32 16Z" 
-                fill="white"
-              />
-              <circle cx="32" cy="24" r="3" fill="#4F46E5"/>
-            </svg>
+            <img 
+              src="/logo.png" 
+              alt="Logo" 
+              className="h-16 w-16 object-contain"
+            />
           </div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
             Sign in to your account
