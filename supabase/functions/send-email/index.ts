@@ -17,6 +17,8 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
+    console.log('Edge function called, headers:', req.headers.get('Authorization') ? 'Auth header present' : 'No auth header')
+    
     const payload = await req.json()
     const { email, inviteUrl, tenantName, role } = payload
 

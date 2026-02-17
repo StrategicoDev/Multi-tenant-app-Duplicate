@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 import DashboardLayout from '../../components/DashboardLayout'
+import UserManagement from '../../components/UserManagement'
 import { supabase } from '../../lib/supabase'
 import type { Invitation } from '../../types/auth'
 
@@ -316,6 +317,15 @@ export default function OwnerDashboard() {
             )}
           </div>
         </div>
+
+        {/* User Management Section */}
+        {user && tenant && (
+          <UserManagement 
+            tenantId={tenant.id}
+            currentUserId={user.id}
+            currentUserRole={user.role}
+          />
+        )}
 
         {/* Owner Privileges Section */}
         <div className="bg-white shadow rounded-lg p-6">

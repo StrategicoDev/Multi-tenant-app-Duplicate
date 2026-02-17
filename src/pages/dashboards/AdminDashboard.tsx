@@ -1,5 +1,6 @@
 import { useAuth } from '../../contexts/AuthContext'
 import DashboardLayout from '../../components/DashboardLayout'
+import UserManagement from '../../components/UserManagement'
 
 export default function AdminDashboard() {
   const { user, tenant } = useAuth()
@@ -111,6 +112,15 @@ export default function AdminDashboard() {
             </div>
           </div>
         </div>
+
+        {/* User Management Section */}
+        {user && tenant && (
+          <UserManagement 
+            tenantId={tenant.id}
+            currentUserId={user.id}
+            currentUserRole={user.role}
+          />
+        )}
 
         {/* Admin Privileges Section */}
         <div className="bg-white shadow rounded-lg p-6">
