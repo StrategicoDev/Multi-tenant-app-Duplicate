@@ -89,6 +89,7 @@ export default function OwnerDashboard() {
           inviteUrl: inviteUrl,
           tenantName: tenant?.name || 'the organization',
           role: inviteRole,
+          type: 'invitation'
         },
       })
 
@@ -96,12 +97,11 @@ export default function OwnerDashboard() {
 
       if (emailError) {
         console.error('Email sending failed:', emailError)
-        // Still show success for invitation creation
-        setInviteMessage(`Invitation created! Share this link: ${inviteUrl}`)
-      } else {
-        setInviteMessage('Invitation sent successfully!')
+        // Throw error to show proper error message
+        throw new Error(`Failed to send invitation email: ${emailError.message || 'Email service not configured'}. Please ensure the send-email edge function is deployed and SMTP credentials are set.`)
       }
-
+      
+      setInviteMessage('Invitation sent successfully!')
       setInviteEmail('')
       setInviteRole('member')
       fetchInvitations()

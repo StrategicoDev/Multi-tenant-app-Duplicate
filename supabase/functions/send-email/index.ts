@@ -20,9 +20,9 @@ Deno.serve(async (req: Request) => {
     console.log('Edge function called, headers:', req.headers.get('Authorization') ? 'Auth header present' : 'No auth header')
     
     const payload = await req.json()
-    const { email, inviteUrl, tenantName, role } = payload
+    const { email, inviteUrl, tenantName, role, type = 'invitation' } = payload
 
-    console.log('Received payload:', { email, inviteUrl, tenantName, role })
+    console.log('Received payload:', { email, inviteUrl, tenantName, role, type })
 
     if (!email || !inviteUrl) {
       return new Response(
@@ -49,7 +49,7 @@ Deno.serve(async (req: Request) => {
       )
     }
 
-    console.log('Sending invite email via SMTP to:', email)
+    console.log(`Sending ${type} email via SMTP to:`, email)
     console.log('SMTP Config:', { host: smtpHost, port: smtpPort, user: smtpUser })
 
     // Create transporter
@@ -63,12 +63,36 @@ Deno.serve(async (req: Request) => {
       },
     })
 
-    // Send email
-    const info = await transporter.sendMail({
-      from: `"Strategico" <sammy@strategico.co.za>`,
-      to: email,
-      subject: `You've been invited to join ${tenantName}`,
-      html: `
+    // Prepare email content based on type
+    let emailSubject: string
+    let emailHtml: string
+
+    if (type === 'verification') {
+      emailSubject = 'Verify your email address'
+      emailHtml = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2>Welcome to Strategico!</h2>
+          <p>Thank you for signing up. Please verify your email address to complete your registration.</p>
+          <p>Click the button below to verify your email:</p>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${inviteUrl}" 
+               style="background-color: #4F46E5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
+              Verify Email
+            </a>
+          </div>
+          <p style="color: #666; font-size: 14px;">
+            Or copy and paste this link into your browser:<br>
+            <a href="${inviteUrl}">${inviteUrl}</a>
+          </p>
+          <p style="color: #999; font-size: 12px; margin-top: 40px;">
+            If you didn't sign up for this account, you can safely ignore this email.
+          </p>
+        </div>
+      `
+    } else {
+      // Invitation email
+      emailSubject = `You've been invited to join ${tenantName}`
+      emailHtml = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <h2>You've been invited!</h2>
           <p>You've been invited to join <strong>${tenantName}</strong> as a <strong>${role}</strong>.</p>
@@ -87,15 +111,27 @@ Deno.serve(async (req: Request) => {
             This invitation will expire in 7 days. If you didn't expect this invitation, you can safely ignore this email.
           </p>
         </div>
-      `,
+      `
+    }
+
+    // Send email
+    const info = await transporter.sendMail({
+      from: `"Strategico" <sammy@strategico.co.za>`,
+      to: email,
+      subject: emailSubject,
+      html: emailHtml,
     })
 
-    console.log(`✅ Invitation email sent to ${email}`, info.messageId)
+    console.log(`✅ ${type.charAt(0).toUpperCase() + type.slice(1)} email sent to ${email}`)
+    console.log(`   Message ID: ${info.messageId}`)
+    console.log(`   Timestamp: ${new Date().toISOString()}`)
 
     return new Response(
       JSON.stringify({ 
         ok: true, 
-        message: `Invitation sent to ${email}`
+        message: `${type.charAt(0).toUpperCase() + type.slice(1)} email sent to ${email}`,
+        messageId: info.messageId,
+        timestamp: new Date().toISOString()
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
