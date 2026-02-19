@@ -83,6 +83,9 @@ export default function OwnerDashboard() {
       // Send invitation email via edge function
       const inviteUrl = `${window.location.origin}/accept-invite?token=${token}`
       
+      // Get the current session to include auth token
+      const { data: { session } } = await supabase.auth.getSession()
+      
       const { data: emailData, error: emailError } = await supabase.functions.invoke('send-email', {
         body: {
           email: inviteEmail,
@@ -91,6 +94,9 @@ export default function OwnerDashboard() {
           role: inviteRole,
           type: 'invitation'
         },
+        headers: {
+          Authorization: `Bearer ${session?.access_token || ''}`
+        }
       })
 
       console.log('Email function response:', { emailData, emailError })
