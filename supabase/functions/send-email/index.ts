@@ -1,6 +1,12 @@
-/// <reference types="https://deno.land/x/types/index.d.ts" />
-
 // Supabase Edge Function - Sends custom invite emails via Mailtrap API
+
+// Type declarations for Deno runtime
+declare namespace Deno {
+  export function serve(handler: (req: Request) => Response | Promise<Response>): void;
+  export namespace env {
+    export function get(key: string): string | undefined;
+  }
+}
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
