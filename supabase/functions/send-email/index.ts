@@ -6,9 +6,7 @@ declare const Deno: {
   };
 };
 
-// Supabase Edge Function - Sends custom invite emails via SMTP using nodemailer
-// @ts-expect-error - npm: prefix for npm packages in Deno
-import nodemailer from 'npm:nodemailer@6.9.7'
+// Supabase Edge Function - Sends custom invite emails via Mailtrap API
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -38,37 +36,18 @@ Deno.serve(async (req: Request) => {
       )
     }
 
-    // Get SMTP settings from environment
-
-    const smtpHost = Deno.env.get('SMTP_HOST')
-
-    const smtpPort = parseInt(Deno.env.get('SMTP_PORT') || '587')
- 
-    const smtpUser = Deno.env.get('SMTP_USER')
-
-    const smtpPass = Deno.env.get('SMTP_PASS')
+    // Get Mailtrap API token from environment
+    const mailtrapApiToken = Deno.env.get('MAILTRAP_API_TOKEN')
     
-    if (!smtpHost || !smtpUser || !smtpPass) {
-      console.error('SMTP not configured')
+    if (!mailtrapApiToken) {
+      console.error('Mailtrap API token not configured')
       return new Response(
-        JSON.stringify({ error: 'SMTP not configured. Required: SMTP_HOST, SMTP_USER, SMTP_PASS' }),
+        JSON.stringify({ error: 'Mailtrap API token not configured. Required: MAILTRAP_API_TOKEN' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
-    console.log(`Sending ${type} email via SMTP to:`, email)
-    console.log('SMTP Config:', { host: smtpHost, port: smtpPort, user: smtpUser })
-
-    // Create transporter
-    const transporter = nodemailer.createTransport({
-      host: smtpHost,
-      port: smtpPort,
-      secure: false, // Use STARTTLS
-      auth: {
-        user: smtpUser,
-        pass: smtpPass,
-      },
-    })
+    console.log(`Sending ${type} email via Mailtrap API to:`, email)
 
     // Prepare email content based on type
     let emailSubject: string
@@ -121,23 +100,45 @@ Deno.serve(async (req: Request) => {
       `
     }
 
-    // Send email
-    const info = await transporter.sendMail({
-      from: `"Strategico" <sammy@strategico.co.za>`,
-      to: email,
-      subject: emailSubject,
-      html: emailHtml,
+    // Send email via Mailtrap API
+    const mailtrapResponse = await fetch('https://send.api.mailtrap.io/api/send', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${mailtrapApiToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: {
+          email: 'sammy@strategico.co.za',
+          name: 'Strategico'
+        },
+        to: [
+          {
+            email: email
+          }
+        ],
+        subject: emailSubject,
+        html: emailHtml,
+      }),
     })
 
+    if (!mailtrapResponse.ok) {
+      const errorText = await mailtrapResponse.text()
+      console.error('Mailtrap API error:', errorText)
+      throw new Error(`Mailtrap API error: ${mailtrapResponse.status} - ${errorText}`)
+    }
+
+    const result = await mailtrapResponse.json()
+
     console.log(`✅ ${type.charAt(0).toUpperCase() + type.slice(1)} email sent to ${email}`)
-    console.log(`   Message ID: ${info.messageId}`)
+    console.log(`   Message ID: ${result.message_id || 'N/A'}`)
     console.log(`   Timestamp: ${new Date().toISOString()}`)
 
     return new Response(
       JSON.stringify({ 
         ok: true, 
         message: `${type.charAt(0).toUpperCase() + type.slice(1)} email sent to ${email}`,
-        messageId: info.messageId,
+        messageId: result.message_id || 'N/A',
         timestamp: new Date().toISOString()
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
