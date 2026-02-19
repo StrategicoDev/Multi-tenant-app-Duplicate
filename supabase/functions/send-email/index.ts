@@ -1,3 +1,10 @@
+// Deno type declarations for Supabase Edge Functions
+declare const Deno: {
+  serve: (handler: (req: Request) => Response | Promise<Response>) => void;
+  env: {
+    get: (key: string) => string | undefined;
+  };
+};
 
 // Supabase Edge Function - Sends custom invite emails via SMTP using nodemailer
 // @ts-expect-error - npm: prefix for npm packages in Deno
