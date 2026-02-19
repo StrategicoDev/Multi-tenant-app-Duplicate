@@ -1,11 +1,3 @@
-// Deno type declarations for Supabase Edge Functions
-declare const Deno: {
-  serve: (handler: (req: Request) => Response | Promise<Response>) => void;
-  env: {
-    get: (key: string) => string | undefined;
-  };
-};
-
 // Supabase Edge Function - Sends custom invite emails via Mailtrap API
 
 const corsHeaders = {
