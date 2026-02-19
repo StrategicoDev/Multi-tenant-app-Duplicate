@@ -1,3 +1,5 @@
+/// <reference types="https://deno.land/x/types/index.d.ts" />
+
 // Supabase Edge Function - Sends custom invite emails via Mailtrap API
 
 const corsHeaders = {
