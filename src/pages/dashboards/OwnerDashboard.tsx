@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 import DashboardLayout from '../../components/DashboardLayout'
 import UserManagement from '../../components/UserManagement'
+import SubscriptionManagement from '../../components/SubscriptionManagement'
 import { supabase } from '../../lib/supabase'
 import type { Invitation } from '../../types/auth'
 
@@ -373,6 +374,12 @@ export default function OwnerDashboard() {
             onUserChange={fetchUserCount}
           />
         )}
+
+        {/* Subscription Management Section */}
+        <div className="mt-6">
+          <h2 className="text-lg font-medium text-gray-900 mb-4">Subscription & Billing</h2>
+          <SubscriptionManagement />
+        </div>
 
         {/* Owner Privileges Section */}
         <div className="bg-white shadow rounded-lg p-6">

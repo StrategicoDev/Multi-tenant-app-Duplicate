@@ -9,6 +9,7 @@ import ResetPassword from './pages/ResetPassword'
 import VerifyEmail from './pages/VerifyEmail'
 import AcceptInvite from './pages/AcceptInvite'
 import Dashboard from './pages/Dashboard'
+import Pricing from './pages/Pricing'
 
 function AuthCallbackHandler() {
   const navigate = useNavigate()
@@ -45,6 +46,7 @@ function App() {
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
           <Route path="/accept-invite" element={<AcceptInvite />} />
+          <Route path="/pricing" element={<Pricing />} />
 
           {/* Protected Routes */}
           <Route
