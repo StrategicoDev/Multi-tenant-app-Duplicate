@@ -33,18 +33,35 @@ export const Pricing: React.FC = () => {
         throw new Error('No active session');
       }
 
+      console.log('📞 Calling create-checkout with:', { 
+        priceId: plan.stripePriceId, 
+        tier: plan.id,
+        hasToken: !!session.access_token 
+      });
+
       // Call Supabase edge function to create checkout session
       const { data, error } = await supabase.functions.invoke('create-checkout', {
         body: {
           priceId: plan.stripePriceId,
           tier: plan.id,
         },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
       });
 
-      if (error) throw error;
+      console.log('📨 Response:', { data, error });
+
+      if (error) {
+        console.error('❌ Edge function error:', error);
+        throw error;
+      }
 
       if (data?.url) {
+        console.log('✅ Redirecting to checkout:', data.url);
         window.location.href = data.url;
+      } else {
+        throw new Error('No checkout URL returned');
       }
     } catch (error) {
       console.error('Error creating checkout session:', error);
