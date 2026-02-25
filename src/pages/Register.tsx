@@ -103,13 +103,13 @@ export default function Register() {
         <div className="auth-box">
           <div className="rounded-md bg-green-50 p-4">
             <h3 className="text-lg font-medium text-green-800 mb-2">
-              Registration successful!
+              🎉 Registration successful!
             </h3>
             <p className="text-sm text-green-700 mb-2">
-              Your organization "{tenantName}" has been created and you are the owner.
+              Your organization "{tenantName}" has been created with a <strong>14-day free trial</strong>. You are the owner.
             </p>
             <p className="text-sm text-green-700 mb-4">
-              Please check your email for a verification link. Once you click the link, you'll be automatically logged in and redirected to your dashboard.
+              Please check your email for a verification link. Once you click the link, you'll be automatically logged in and can start using your account immediately - no credit card required!
             </p>
             <p className="text-sm text-green-600">
               Redirecting to login page...
@@ -135,15 +135,17 @@ export default function Register() {
           <h1 className="text-center text-3xl font-bold text-gray-900 mb-2">
             Multi-Tenant-App
           </h1>
-          <p className="text-center text-gray-900 mb-2">
-            Create your organization
-          </p>
-          <p className="text-center text-sm text-gray-600">
-            Start your own organization and invite team members
-          </p>
-          <p className="text-center text-xs text-gray-500">
-            Already have an invitation? Check your email for the invite link
-          </p>
+          <div className="text-center mb-6">
+            <p className="text-gray-900 text-lg font-semibold mb-1">
+              Create your organization - 100% FREE
+            </p>
+            <p className="text-sm text-gray-600 mb-1">
+              Start your 14-day free trial • No credit card required
+            </p>
+            <p className="text-xs text-gray-500">
+              Already have an invitation? Check your email for the invite link
+            </p>
+          </div>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           {error && (
@@ -223,11 +225,16 @@ export default function Register() {
             </div>
           </div>
 
-          <div className="bg-blue-50 border border-blue-200 rounded-md p-3 mb-4">
-            <p className="text-sm text-blue-800">
-              💡 <strong>Note:</strong> You will be the owner of "{tenantName || 'your organization'}". 
-              After registration, you can invite team members as admins or members.
+          <div className="bg-green-50 border border-green-200 rounded-md p-3 mb-4">
+            <p className="text-sm text-green-800 mb-2">
+              ✨ <strong>What you get for FREE:</strong>
             </p>
+            <ul className="text-xs text-green-700 space-y-1 ml-4">
+              <li>• 14-day free trial - no credit card required</li>
+              <li>• Full owner access to "{tenantName || 'your organization'}"</li>
+              <li>• Invite up to 3 team members</li>
+              <li>• All essential features included</li>
+            </ul>
           </div>
 
           <div>
@@ -236,7 +243,7 @@ export default function Register() {
               disabled={loading}
               className="btn-primary w-full flex justify-center"
             >
-              {loading ? 'Creating account...' : 'Sign up'}
+              {loading ? 'Creating your free account...' : 'Start Free 14-Day Trial'}
             </button>
           </div>
 

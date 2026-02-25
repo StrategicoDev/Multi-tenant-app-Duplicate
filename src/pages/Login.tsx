@@ -139,10 +139,11 @@ export default function Login() {
             <span className="text-gray-600">Don't have an account? </span>
             <Link
               to="/register"
-              className="btn-link"
+              className="btn-link font-semibold"
             >
-              Sign up
+              Start Free Trial
             </Link>
+            <p className="text-xs text-gray-500 mt-1">14 days free • No credit card required</p>
           </div>
         </form>
       </div>

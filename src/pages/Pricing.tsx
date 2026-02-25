@@ -62,7 +62,10 @@ export const Pricing: React.FC = () => {
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
             Choose Your Plan
           </h1>
-          <p className="text-xl text-gray-600">
+          <p className="text-xl text-gray-600 mb-2">
+            Start FREE with a 14-day trial • No credit card required
+          </p>
+          <p className="text-base text-gray-500">
             Select the perfect plan for your business needs
           </p>
         </div>
