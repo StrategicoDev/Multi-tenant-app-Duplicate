@@ -2,8 +2,11 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
 
-const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
-  apiVersion: '2026-01-28.clover',
+const stripeKey = Deno.env.get('STRIPE_SECRET_KEY') || '';
+console.log('🔑 Stripe key loaded:', stripeKey ? `${stripeKey.substring(0, 12)}...` : 'MISSING!');
+
+const stripe = new Stripe(stripeKey, {
+  apiVersion: '2023-10-16',
 })
 
 const corsHeaders = {
