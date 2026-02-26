@@ -38,23 +38,31 @@ serve(async (req: Request) => {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session
         console.log('💳 Checkout session completed:', session.id)
+        console.log('📋 Full session data:', JSON.stringify(session, null, 2))
 
         // Get metadata from session
         const tenantId = session.metadata?.tenant_id
         const tier = session.metadata?.tier
+        const userId = session.metadata?.user_id
+
+        console.log('🔍 Metadata extracted:', { tenantId, tier, userId })
 
         if (!tenantId || !tier) {
-          console.error('Missing tenant_id or tier in session metadata')
+          console.error('❌ Missing tenant_id or tier in session metadata')
+          console.error('Available metadata:', session.metadata)
           break
         }
 
         // Get subscription details
+        console.log('🔍 Retrieving subscription from Stripe:', session.subscription)
         const subscriptionData = await stripe.subscriptions.retrieve(
           session.subscription as string
         )
+        console.log('✅ Subscription retrieved:', subscriptionData.id)
 
         // Update subscription in database
-        const { error } = await supabaseAdmin
+        console.log('💾 Updating database for tenant_id:', tenantId)
+        const { data: updatedData, error } = await supabaseAdmin
           .from('subscriptions')
           .update({
             tier: tier,
@@ -65,11 +73,14 @@ serve(async (req: Request) => {
             cancel_at_period_end: false,
           })
           .eq('tenant_id', tenantId)
+          .select()
 
         if (error) {
-          console.error('Error updating subscription:', error)
+          console.error('❌ Error updating subscription:', error)
+          console.error('Error details:', JSON.stringify(error, null, 2))
         } else {
-          console.log('✅ Subscription updated successfully')
+          console.log('✅ Subscription updated successfully!')
+          console.log('Updated data:', JSON.stringify(updatedData, null, 2))
         }
         break
       }
