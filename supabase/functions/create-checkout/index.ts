@@ -1,6 +1,6 @@
-import { serve } from 'https://deno.land/std@0.192.0/http/server.ts'
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import Stripe from 'https://esm.sh/stripe@14.10.0?target=deno'
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const stripeKey = Deno.env.get('STRIPE_SECRET_KEY') || '';
 console.log('🔑 Stripe key loaded:', stripeKey ? `${stripeKey.substring(0, 12)}...` : 'MISSING!');
@@ -40,22 +40,38 @@ serve(async (req: Request) => {
     }
     
     // Create Supabase client - use anon key with the auth header for proper JWT validation
-   const supabase = createClient(
-  Deno.env.get("SUPABASE_URL")!,
-  Deno.env.get("SUPABASE_ANON_KEY")!,
-  {
-    global: {
-      headers: {
-        Authorization: req.headers.get("Authorization")!,
-      },
-    },
-  }
-)
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")
+    
+    console.log('🔍 Environment check:')
+    console.log('  SUPABASE_URL:', supabaseUrl ? `${supabaseUrl.substring(0, 30)}...` : 'MISSING')
+    console.log('  SUPABASE_ANON_KEY:', supabaseAnonKey ? `${supabaseAnonKey.substring(0, 20)}...` : 'MISSING')
+    
+    if (!supabaseUrl || !supabaseAnonKey) {
+      console.error('❌ Missing required environment variables')
+      return new Response(
+        JSON.stringify({ error: 'Server configuration error: missing environment variables' }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 500,
+        }
+      )
+    }
+    
+    const supabase = createClient(
+      supabaseUrl,
+      supabaseAnonKey,
+      {
+        global: {
+          headers: {
+            Authorization: req.headers.get("Authorization")!,
+          },
+        },
+      }
+    )
     
     // Get the authenticated user
     console.log('🔍 Getting user...')
-    console.log('🔍 SUPABASE_URL:', Deno.env.get("SUPABASE_URL") ? 'SET' : 'MISSING')
-    console.log('🔍 SUPABASE_ANON_KEY:', Deno.env.get("SUPABASE_ANON_KEY") ? 'SET' : 'MISSING')
     
     const { data: { user }, error: userError } = await supabase.auth.getUser()
 

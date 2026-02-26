@@ -7,9 +7,18 @@ import { supabase } from '../lib/supabase';
 
 export const Pricing: React.FC = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, tenant, signOut } = useAuth();
   const [loading, setLoading] = useState<string | null>(null);
   const plans = getAllPricingPlans();
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      navigate('/login');
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
 
   const handleSelectPlan = async (plan: PricingPlan) => {
     if (!user) {
@@ -88,7 +97,64 @@ export const Pricing: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
+      {/* Navigation Header */}
+      <nav className="bg-white shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between h-16">
+            <div className="flex items-center">
+              <button
+                onClick={() => navigate('/dashboard')}
+                className="text-xl font-bold text-gray-900 hover:text-gray-700 transition-colors"
+              >
+                {tenant?.name || 'Multi-Tenant App'}
+              </button>
+            </div>
+            <div className="flex items-center space-x-4">
+              {user ? (
+                <>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-sm text-gray-700">{user.email}</span>
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 capitalize">
+                      {user.role}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => navigate('/dashboard')}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
+                  >
+                    Dashboard
+                  </button>
+                  <button
+                    onClick={handleSignOut}
+                    className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700 transition-colors"
+                  >
+                    Sign Out
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={() => navigate('/login')}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
+                  >
+                    Sign In
+                  </button>
+                  <button
+                    onClick={() => navigate('/register')}
+                    className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700 transition-colors"
+                  >
+                    Get Started
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      {/* Main Content */}
+      <div className="py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="text-center mb-12">
@@ -220,6 +286,7 @@ export const Pricing: React.FC = () => {
               Contact our sales team
             </a>
           </p>
+        </div>
         </div>
       </div>
     </div>
