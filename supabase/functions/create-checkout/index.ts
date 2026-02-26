@@ -24,22 +24,30 @@ serve(async (req: Request) => {
     console.log('🚀 Create checkout called')
     console.log('📝 Request headers:', Object.fromEntries(req.headers.entries()))
     
-    const supabaseClient = createClient(
+    // Get auth header
+    const authHeader = req.headers.get('Authorization')
+    console.log('🔑 Auth header present:', !!authHeader)
+    
+    if (!authHeader) {
+      console.error('❌ No Authorization header')
+      return new Response(
+        JSON.stringify({ error: 'No authorization header provided' }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 401,
+        }
+      )
+    }
+    
+    // Create Supabase client with service role key for admin operations
+    const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      {
-        global: {
-          headers: { Authorization: req.headers.get('Authorization')! },
-        },
-      }
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
-
-    // Get the user from the auth header
-    console.log('🔍 Getting user...')
-    const {
-      data: { user },
-      error: userError,
-    } = await supabaseClient.auth.getUser()
+    
+    // Verify the user's JWT token
+    const token = authHeader.replace('Bearer ', '')
+    const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(token)
 
     if (userError) {
       console.error('❌ Error getting user:', userError)
@@ -58,7 +66,7 @@ serve(async (req: Request) => {
 
     // Get user's tenant from profile
     console.log('🔍 Querying profile for user:', user.id)
-    const { data: userProfile, error: profileError } = await supabaseClient
+    const { data: userProfile, error: profileError } = await supabaseAdmin
       .from('profiles')
       .select('tenant_id')
       .eq('id', user.id)
@@ -77,7 +85,7 @@ serve(async (req: Request) => {
     console.log('✅ Found tenant:', userProfile.tenant_id)
 
     // Check if customer already exists
-    const { data: existingSubscription } = await supabaseClient
+    const { data: existingSubscription } = await supabaseAdmin
       .from('subscriptions')
       .select('stripe_customer_id')
       .eq('tenant_id', userProfile.tenant_id)
@@ -100,7 +108,7 @@ serve(async (req: Request) => {
         console.log('✅ Stripe customer created:', customerId)
 
         // Update subscription with customer ID
-        await supabaseClient
+        await supabaseAdmin
           .from('subscriptions')
           .update({ stripe_customer_id: customerId })
           .eq('tenant_id', userProfile.tenant_id)
@@ -149,10 +157,17 @@ serve(async (req: Request) => {
       throw stripeError
     }
   } catch (error) {
-    console.error('Error creating checkout session:', error)
+    console.error('❌ Error creating checkout session:', error)
     const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    const errorDetails = error instanceof Error ? error.stack : String(error)
+    console.error('📋 Error details:', errorDetails)
+    
     return new Response(
-      JSON.stringify({ error: errorMessage }),
+      JSON.stringify({ 
+        error: errorMessage,
+        details: errorDetails,
+        timestamp: new Date().toISOString()
+      }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,

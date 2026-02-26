@@ -34,7 +34,7 @@ export const PRICING_PLANS: Record<PricingTier, PricingPlan> = {
       'Priority email support',
       'Advanced analytics'
     ],
-    stripePriceId: process.env.VITE_STRIPE_STARTER_PRICE_ID,
+    stripePriceId: import.meta.env.VITE_STRIPE_STARTER_PRICE_ID,
     maxUsers: 10,
     maxProjects: 5
   },
@@ -54,7 +54,7 @@ export const PRICING_PLANS: Record<PricingTier, PricingPlan> = {
       'Custom integrations',
       'Advanced reporting'
     ],
-    stripePriceId: process.env.VITE_STRIPE_STANDARD_PRICE_ID,
+    stripePriceId: import.meta.env.VITE_STRIPE_STANDARD_PRICE_ID,
     maxUsers: 25,
     maxProjects: -1 // unlimited
   },
@@ -76,7 +76,7 @@ export const PRICING_PLANS: Record<PricingTier, PricingPlan> = {
       'SLA guarantee',
       'Advanced security features'
     ],
-    stripePriceId: process.env.VITE_STRIPE_PREMIUM_PRICE_ID,
+    stripePriceId: import.meta.env.VITE_STRIPE_PREMIUM_PRICE_ID,
     maxUsers: -1, // unlimited
     maxProjects: -1 // unlimited
   }

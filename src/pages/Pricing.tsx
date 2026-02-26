@@ -27,16 +27,18 @@ export const Pricing: React.FC = () => {
       setLoading(plan.id);
       
       // Get the session token
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
-      if (!session) {
+      if (sessionError || !session) {
+        console.error('❌ No session:', sessionError);
         throw new Error('No active session');
       }
 
       console.log('📞 Calling create-checkout with:', { 
         priceId: plan.stripePriceId, 
         tier: plan.id,
-        hasToken: !!session.access_token 
+        hasSession: !!session,
+        hasAccessToken: !!session.access_token,
       });
 
       // Call Supabase edge function to create checkout session
@@ -54,6 +56,20 @@ export const Pricing: React.FC = () => {
 
       if (error) {
         console.error('❌ Edge function error:', error);
+        
+        // Try to get error details from response
+        if (error.context && error.context.json) {
+          try {
+            const errorData = await error.context.json();
+            console.error('📋 Error details:', errorData);
+            alert(`Checkout failed: ${errorData.error || 'Unknown error'}\n\nDetails: ${errorData.details || 'No details available'}`);
+          } catch (e) {
+            console.error('Could not parse error response');
+            alert('Failed to start checkout. Please try again.');
+          }
+        } else {
+          alert('Failed to start checkout. Please try again.');
+        }
         throw error;
       }
 
