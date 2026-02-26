@@ -1,6 +1,6 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import Stripe from 'stripe'
-import { createClient } from '@supabase/supabase-js'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const stripeKey = Deno.env.get('STRIPE_SECRET_KEY') || '';
 console.log('🔑 Stripe key loaded:', stripeKey ? `${stripeKey.substring(0, 12)}...` : 'MISSING!');
@@ -39,15 +39,20 @@ serve(async (req: Request) => {
       )
     }
     
-    // Create Supabase client with service role key for admin operations
-    const supabaseAdmin = createClient(
+    // Create Supabase client - use anon key with the auth header for proper JWT validation
+    const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      {
+        global: {
+          headers: { Authorization: authHeader },
+        },
+      }
     )
     
-    // Verify the user's JWT token
-    const token = authHeader.replace('Bearer ', '')
-    const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(token)
+    // Get the authenticated user
+    console.log('🔍 Getting user...')
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser()
 
     if (userError) {
       console.error('❌ Error getting user:', userError)
@@ -60,6 +65,12 @@ serve(async (req: Request) => {
     }
 
     console.log('✅ User found:', user.email)
+    
+    // Create admin client for database operations
+    const supabaseAdmin = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    )
 
     const { priceId, tier } = await req.json()
     console.log('💰 Creating checkout for:', { priceId, tier })
