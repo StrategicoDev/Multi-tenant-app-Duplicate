@@ -64,27 +64,35 @@ Payment information is **only collected when**:
 - Basic features
 - Email support
 
-#### 🔵 Starter - R60/month
+#### 🔵 Starter - $5/month
 - Requires payment after trial
-- Up to 10 users
+- Up to 5 users
 - 5 projects
 - All basic features
 - Priority email support
 
-#### 🟡 Standard - R80/month
+#### 🟡 Standard - $10/month
 - Requires payment after trial
-- Up to 25 users
+- Up to 15 users
 - Unlimited projects
 - Advanced features
 - Priority support
 
-#### 🔴 Premium - R120/month
+#### 🟣 Business - $25/month
+- Requires payment after trial
+- Up to 50 users
+- Unlimited projects
+- Advanced security features
+- Dedicated account manager
+
+#### 🔴 Premium - $50/month
 - Requires payment after trial
 - Unlimited users
 - Unlimited projects
 - All features
 - 24/7 support
-- Dedicated account manager
+- Custom development
+- SLA guarantee
 
 ### 📝 User Journey
 

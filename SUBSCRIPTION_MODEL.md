@@ -95,8 +95,9 @@ WHERE tenant_id = tenant_id
 - Subscription applies to entire organization
 - User limits expand based on tier:
   - Free: 3 users
-  - Starter: 10 users
-  - Standard: 25 users
+  - Starter: 5 users
+  - Standard: 15 users
+  - Business: 50 users
   - Premium: Unlimited users
 
 ---
@@ -163,12 +164,12 @@ subscriptions {
 3. **Owner upgrades to Standard ($10/month)**
    - Subscription: Standard, Active
    - Users: 3 (all get Standard features)
-   - Can now add up to 25 users total
+   - Can now add up to 15 users total
 
 4. **Owner invites 5 more users**
    - All 5 join under Standard subscription
    - No extra charge per user (flat $10/month)
-   - Users: 8 (within Standard tier limit of 25)
+   - Users: 8 (within Standard tier limit of 15)
 
 ---
 

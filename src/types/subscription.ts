@@ -1,4 +1,4 @@
-export type PricingTier = 'free' | 'starter' | 'standard' | 'premium';
+export type PricingTier = 'free' | 'starter' | 'standard' | 'business' | 'premium';
 
 export interface PricingPlan {
   id: PricingTier;

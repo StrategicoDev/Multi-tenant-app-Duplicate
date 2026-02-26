@@ -28,14 +28,14 @@ export const PRICING_PLANS: Record<PricingTier, PricingPlan> = {
     color: 'blue',
     emoji: '🔵',
     features: [
-      'Up to 10 users',
+      'Up to 5 users',
       'All basic features',
       '5 projects',
       'Priority email support',
       'Advanced analytics'
     ],
     stripePriceId: import.meta.env.VITE_STRIPE_STARTER_PRICE_ID,
-    maxUsers: 10,
+    maxUsers: 5,
     maxProjects: 5
   },
   standard: {
@@ -47,7 +47,7 @@ export const PRICING_PLANS: Record<PricingTier, PricingPlan> = {
     color: 'yellow',
     emoji: '🟡',
     features: [
-      'Up to 25 users',
+      'Up to 15 users',
       'All starter features',
       'Unlimited projects',
       'Priority support',
@@ -55,26 +55,48 @@ export const PRICING_PLANS: Record<PricingTier, PricingPlan> = {
       'Advanced reporting'
     ],
     stripePriceId: import.meta.env.VITE_STRIPE_STANDARD_PRICE_ID,
-    maxUsers: 25,
+    maxUsers: 15,
+    maxProjects: -1 // unlimited
+  },
+  business: {
+    id: 'business',
+    name: 'Business',
+    price: 25,
+    currency: 'USD',
+    interval: 'month',
+    color: 'purple',
+    emoji: '🟣',
+    features: [
+      'Up to 50 users',
+      'All standard features',
+      'Unlimited projects',
+      'Priority phone & email support',
+      'Advanced security features',
+      'Custom integrations',
+      'Dedicated account manager'
+    ],
+    stripePriceId: import.meta.env.VITE_STRIPE_BUSINESS_PRICE_ID,
+    maxUsers: 50,
     maxProjects: -1 // unlimited
   },
   premium: {
     id: 'premium',
     name: 'Premium',
-    price: 25,
+    price: 50,
     currency: 'USD',
     interval: 'month',
     color: 'red',
     emoji: '🔴',
     features: [
       'Unlimited users',
-      'All standard features',
+      'All business features',
       'Unlimited projects',
       '24/7 phone & email support',
       'Dedicated account manager',
       'Custom development',
       'SLA guarantee',
-      'Advanced security features'
+      'Advanced security & compliance',
+      'White-label options'
     ],
     stripePriceId: import.meta.env.VITE_STRIPE_PREMIUM_PRICE_ID,
     maxUsers: -1, // unlimited
