@@ -54,16 +54,40 @@ serve(async (req: Request) => {
     
     // Get the authenticated user
     console.log('🔍 Getting user...')
+    console.log('🔍 SUPABASE_URL:', Deno.env.get("SUPABASE_URL") ? 'SET' : 'MISSING')
+    console.log('🔍 SUPABASE_ANON_KEY:', Deno.env.get("SUPABASE_ANON_KEY") ? 'SET' : 'MISSING')
+    
     const { data: { user }, error: userError } = await supabase.auth.getUser()
 
     if (userError) {
       console.error('❌ Error getting user:', userError)
-      throw new Error(`Auth error: ${userError.message}`)
+      console.error('❌ User error details:', JSON.stringify(userError))
+      return new Response(
+        JSON.stringify({ 
+          code: 401,
+          message: 'Invalid JWT',
+          error: userError.message,
+          details: JSON.stringify(userError)
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 401,
+        }
+      )
     }
 
     if (!user) {
       console.error('❌ No user found')
-      throw new Error('No user found')
+      return new Response(
+        JSON.stringify({ 
+          code: 401,
+          message: 'No user found',
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 401,
+        }
+      )
     }
 
     console.log('✅ User found:', user.email)
