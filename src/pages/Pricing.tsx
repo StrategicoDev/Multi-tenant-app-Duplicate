@@ -196,7 +196,7 @@ export const Pricing: React.FC = () => {
                   </h3>
                   <div className="flex items-baseline justify-center">
                     <span className="text-4xl font-bold text-gray-900">
-                      R{plan.price}
+                      ${plan.price}
                     </span>
                     {plan.price > 0 && (
                       <span className="text-gray-600 ml-2">/month</span>

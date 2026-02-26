@@ -118,7 +118,7 @@ export const SubscriptionManagement: React.FC = () => {
               {currentPlan.emoji} {currentPlan.name} Plan
             </h2>
             <p className="text-gray-600 mt-1">
-              {currentPlan.price > 0 ? `R${currentPlan.price}/month` : 'Free'}
+              {currentPlan.price > 0 ? `$${currentPlan.price}/month` : 'Free'}
             </p>
           </div>
           <div>
