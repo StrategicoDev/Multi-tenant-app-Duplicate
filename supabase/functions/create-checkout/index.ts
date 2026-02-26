@@ -40,19 +40,21 @@ serve(async (req: Request) => {
     }
     
     // Create Supabase client - use anon key with the auth header for proper JWT validation
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      {
-        global: {
-          headers: { Authorization: authHeader },
-        },
-      }
-    )
+   const supabase = createClient(
+  Deno.env.get("SUPABASE_URL")!,
+  Deno.env.get("SUPABASE_ANON_KEY")!,
+  {
+    global: {
+      headers: {
+        Authorization: req.headers.get("Authorization")!,
+      },
+    },
+  }
+)
     
     // Get the authenticated user
     console.log('🔍 Getting user...')
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser()
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
 
     if (userError) {
       console.error('❌ Error getting user:', userError)
